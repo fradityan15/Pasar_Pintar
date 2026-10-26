@@ -2,9 +2,10 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { getProductBySlug } from '@/services/catalogService'
+import { listProductReviews } from '@/services/productReviewService'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
-import { formatRupiah } from '@/lib/format'
+import { formatRupiah, formatTanggal } from '@/lib/format'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,6 +20,10 @@ const active = ref(0)
 const adding = ref(false)
 const added = ref(false)
 const addError = ref('')
+const reviews = ref([])
+const reviewsLoading = ref(false)
+const reviewsError = ref('')
+let productRequestId = 0
 let toastTimeout
 
 const images = computed(() =>
@@ -27,21 +32,47 @@ const images = computed(() =>
 const origin = computed(() =>
   [product.value?.umkm?.regions?.name, product.value?.umkm?.regions?.province].filter(Boolean).join(', '),
 )
+const averageRating = computed(() =>
+  reviews.value.length
+    ? reviews.value.reduce((total, review) => total + review.rating, 0) / reviews.value.length
+    : 0,
+)
+
+async function loadReviews(productId = product.value?.id) {
+  if (!productId) return
+  const requestId = productRequestId
+  reviewsLoading.value = true
+  reviewsError.value = ''
+  try {
+    const result = await listProductReviews(productId)
+    if (requestId === productRequestId) reviews.value = result
+  } catch (e) {
+    if (requestId === productRequestId) reviewsError.value = e.message
+  } finally {
+    if (requestId === productRequestId) reviewsLoading.value = false
+  }
+}
 
 async function load() {
+  const requestId = ++productRequestId
   loading.value = true
   error.value = ''
   product.value = null
+  reviews.value = []
+  reviewsError.value = ''
   try {
-    product.value = await getProductBySlug(route.params.slug)
+    const loadedProduct = await getProductBySlug(route.params.slug)
+    if (requestId !== productRequestId) return
+    product.value = loadedProduct
     qty.value = 1
     active.value = 0
     added.value = false
     addError.value = ''
+    if (loadedProduct) await loadReviews(loadedProduct.id)
   } catch (e) {
-    error.value = e.message
+    if (requestId === productRequestId) error.value = e.message
   } finally {
-    loading.value = false
+    if (requestId === productRequestId) loading.value = false
   }
 }
 watch(() => route.params.slug, load, { immediate: true })
@@ -125,12 +156,13 @@ async function beliSekarang() {
       <RouterLink :to="{ name: 'katalog' }" class="btn-primary mt-4">Lihat katalog</RouterLink>
     </div>
 
-    <div v-else class="mt-6 grid grid-cols-1 items-start gap-8 md:grid-cols-2">
-      <div class="min-w-0">
+    <template v-else-if="product">
+      <div class="mt-6 grid grid-cols-1 items-start gap-8 md:grid-cols-2">
+        <div class="min-w-0">
         <div class="aspect-square overflow-hidden rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 sm:p-5">
           <img v-if="images[active]" :src="images[active].url" :alt="product.name" class="h-full w-full object-cover" />
           <div v-else class="flex h-full items-center justify-center rounded-xl bg-slate-50 text-sm text-slate-400">Foto produk belum tersedia</div>
-        </div>
+          </div>
         <div v-if="images.length > 1" class="mt-3 flex gap-2">
           <button
             v-for="(img, i) in images"
@@ -144,7 +176,7 @@ async function beliSekarang() {
         </div>
       </div>
 
-      <div class="flex min-w-0 flex-col gap-5 md:py-2">
+        <div class="flex min-w-0 flex-col gap-5 md:py-2">
         <div>
           <p v-if="product.categories?.name" class="text-sm font-medium text-emerald-700">{{ product.categories.name }}</p>
           <h1 class="mt-2 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">{{ product.name }}</h1>
@@ -213,7 +245,46 @@ async function beliSekarang() {
         <p v-else class="rounded-xl bg-red-50 p-3 text-sm text-red-700">Produk ini belum dapat dipesan karena stok sedang habis.</p>
 
         <p v-if="addError" class="rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ addError }}</p>
+        </div>
       </div>
-    </div>
+
+      <section class="mt-10 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-6 lg:p-8" aria-labelledby="reviews-heading">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <h2 id="reviews-heading" class="text-xl font-bold text-slate-900">Ulasan Pembeli</h2>
+            <p class="mt-1 text-sm text-slate-500">{{ reviews.length }} ulasan</p>
+          </div>
+          <div v-if="reviews.length" class="flex items-center gap-2" aria-label="Rating rata-rata">
+            <div class="flex text-xl" aria-hidden="true">
+              <span v-for="star in 5" :key="star" :class="star <= averageRating ? 'text-amber-400' : 'text-slate-300'">★</span>
+            </div>
+            <span class="text-lg font-bold text-slate-900">{{ averageRating.toFixed(1) }}</span>
+          </div>
+        </div>
+
+        <p v-if="reviewsError" class="mt-4 rounded-xl bg-bad-bg p-4 text-sm text-bad-fg" role="alert">
+          Ulasan belum bisa dimuat: {{ reviewsError }}
+          <button class="ml-2 font-semibold underline" type="button" @click="loadReviews()">Coba lagi</button>
+        </p>
+        <div v-else-if="reviewsLoading" class="mt-5 h-24 animate-pulse rounded-xl bg-surface"></div>
+        <p v-else-if="!reviews.length" class="mt-5 rounded-xl bg-surface p-6 text-center text-sm text-muted">
+          Belum ada ulasan untuk produk ini.
+        </p>
+        <ul v-else class="divide-y divide-slate-100">
+          <li v-for="review in reviews" :key="review.id" class="py-5 first:pt-5 last:pb-0">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-slate-800">Pembeli</span>
+                <span class="flex text-sm" :aria-label="`Rating ${review.rating} dari 5`">
+                  <span v-for="star in 5" :key="star" :class="star <= review.rating ? 'text-amber-400' : 'text-slate-300'" aria-hidden="true">★</span>
+                </span>
+              </div>
+              <time class="text-xs text-slate-500" :datetime="review.created_at">{{ formatTanggal(review.created_at) }}</time>
+            </div>
+            <p v-if="review.comment" class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{{ review.comment }}</p>
+          </li>
+        </ul>
+      </section>
+    </template>
   </div>
 </template>

@@ -21,6 +21,7 @@ const routes = [
       { path: 'produk/:slug', name: 'produk', component: () => import('@/pages/store/ProductDetailPage.vue'), meta: { title: 'Detail produk' } },
       { path: 'keranjang', alias: '/cart', name: 'keranjang', component: () => import('@/pages/store/CartPage.vue'), meta: { title: 'Keranjang' } },
       { path: 'checkout', name: 'checkout', component: () => import('@/pages/store/CheckoutPage.vue'), meta: { title: 'Checkout', requiresAuth: true } },
+      { path: 'payment-simulation/:orderId', name: 'payment-simulation', component: () => import('@/pages/store/MockPaymentPage.vue'), meta: { title: 'Pembayaran', requiresAuth: true } },
       { path: 'pesanan', name: 'pesanan', component: () => import('@/pages/store/OrdersPage.vue'), meta: { title: 'Pesanan saya', requiresAuth: true } },
       { path: 'pesanan/:id', name: 'pesanan-detail', component: () => import('@/pages/store/OrderDetailPage.vue'), meta: { title: 'Detail pesanan', requiresAuth: true } },
     ],

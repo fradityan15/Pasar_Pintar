@@ -45,11 +45,15 @@ export async function confirmOrderReceived(orderId) {
   unwrap(await supabase.rpc('confirm_order_received', { p_order_id: orderId }))
 }
 
+export async function simulatePaymentConfirmation(orderId) {
+  unwrap(await supabase.rpc('simulate_payment_confirmation', { p_order_id: orderId }))
+}
+
 export async function listMyOrders(userId) {
   return unwrap(
     await supabase
       .from('orders')
-      .select('id, order_no, status, total, created_at, order_items(product_name, quantity)')
+      .select('id, order_no, status, total, created_at, order_items(product_id, product_name, quantity)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false }),
   )
