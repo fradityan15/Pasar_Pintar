@@ -14,6 +14,7 @@ const error = ref('')
 const notice = ref('')
 const busyOrderId = ref(null)
 const expandedOrderId = ref(null)
+const trackingRefresh = ref(0)
 const canManageOrders = computed(() => umkm.value?.status === 'active' && umkm.value.is_active)
 
 async function load() {
@@ -38,6 +39,7 @@ async function ubahStatus(order, action, successMessage) {
   try {
     await action(order.order_id, umkm.value.id)
     notice.value = `Pesanan ${order.order_no} ${successMessage}.`
+    trackingRefresh.value++
     await load()
   } catch (e) {
     error.value = e.message
@@ -49,7 +51,7 @@ async function ubahStatus(order, action, successMessage) {
 
 <template>
   <div class="min-h-full bg-slate-50 lg:flex">
-    <SellerDashboardSidebar :umkm="umkm" active="orders" />
+    <SellerDashboardSidebar :umkm="umkm" />
 
     <main class="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div class="mx-auto max-w-7xl">
@@ -123,18 +125,18 @@ async function ubahStatus(order, action, successMessage) {
                       <div v-if="order.seller_shipping_status === 'menunggu_diproses' || order.seller_shipping_status === 'diproses'" class="flex gap-2">
                         <button
                           v-if="order.seller_shipping_status === 'menunggu_diproses'"
-                          class="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60"
+                          class="rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-800 disabled:cursor-wait disabled:opacity-60"
                           type="button"
                           :disabled="busyOrderId === order.order_id"
                           @click="ubahStatus(order, processSellerOrder, 'mulai diproses')"
-                        >{{ busyOrderId === order.order_id ? 'Memproses...' : 'Proses Pesanan' }}</button>
+                        >{{ busyOrderId === order.order_id ? 'Memproses...' : 'Terima & Proses Pesanan' }}</button>
                         <button
                           v-else
                           class="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60"
                           type="button"
                           :disabled="busyOrderId === order.order_id"
                           @click="ubahStatus(order, shipSellerOrder, 'ditandai sudah dikirim')"
-                        >{{ busyOrderId === order.order_id ? 'Memproses...' : 'Kirim Barang' }}</button>
+                        >{{ busyOrderId === order.order_id ? 'Memproses...' : 'Kirim Pesanan' }}</button>
                       </div>
                       <span v-else class="text-xs text-slate-400">—</span>
                     </div>
@@ -142,7 +144,7 @@ async function ubahStatus(order, action, successMessage) {
                 </tr>
                 <tr v-for="order in orders.filter((item) => item.order_id === expandedOrderId)" :key="`${order.order_id}-tracking`" class="border-t border-slate-100 bg-slate-50">
                   <td colspan="6" class="p-4 sm:p-6">
-                    <OrderTracking :order-id="order.order_id" user-role="seller" />
+                    <OrderTracking :key="`${order.order_id}-${trackingRefresh}`" :order-id="order.order_id" user-role="seller" />
                   </td>
                 </tr>
               </tbody>

@@ -15,6 +15,7 @@ const routes = [
       { path: 'akun', name: 'akun', component: () => import('@/pages/store/AccountPage.vue'), meta: { title: 'Akun saya', requiresAuth: true } },
       { path: 'umkm', name: 'umkm', component: () => import('@/pages/store/UmkmListPage.vue'), meta: { title: 'UMKM mitra' } },
       { path: 'umkm/:slug', name: 'umkm-detail', component: () => import('@/pages/store/UmkmDetailPage.vue'), meta: { title: 'Profil UMKM' } },
+      { path: 'mitra', name: 'umkm-dashboard', component: () => import('@/pages/store/UmkmProductsPage.vue'), meta: { title: 'Ringkasan Toko', requiresAuth: true } },
       { path: 'mitra/produk', name: 'umkm-products', component: () => import('@/pages/store/UmkmProductsPage.vue'), meta: { title: 'Dasbor UMKM', requiresAuth: true } },
       { path: 'mitra/pesanan', name: 'umkm-orders', component: () => import('@/pages/store/UmkmOrdersPage.vue'), meta: { title: 'Pesanan masuk', requiresAuth: true } },
       { path: 'mitra/pengaturan', name: 'umkm-settings', component: () => import('@/pages/store/UmkmSettingsPage.vue'), meta: { title: 'Pengaturan Toko', requiresAuth: true } },
@@ -71,7 +72,11 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
-  scrollBehavior: (to, from, saved) => saved || { top: 0 },
+  scrollBehavior: (to, from, saved) => {
+    if (saved) return saved
+    if (to.hash) return { el: to.hash, top: 24 }
+    return { top: 0 }
+  },
 })
 
 router.beforeEach(async (to) => {

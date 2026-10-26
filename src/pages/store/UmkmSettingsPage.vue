@@ -208,7 +208,7 @@ async function simpanPerubahan() {
 
 <template>
   <div class="min-h-full bg-slate-50 lg:flex">
-    <SellerDashboardSidebar :umkm="umkm" active="settings" />
+    <SellerDashboardSidebar :umkm="umkm" />
 
     <main class="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div class="mx-auto max-w-6xl">

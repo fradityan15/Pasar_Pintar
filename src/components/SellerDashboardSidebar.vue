@@ -1,13 +1,20 @@
 <script setup>
-import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 
 defineProps({
   umkm: { type: Object, default: null },
-  active: { type: String, required: true },
 })
 
+const route = useRoute()
 const mobileMenuOpen = ref(false)
+const activeItem = computed(() => {
+  if (route.name === 'umkm-orders') return 'orders'
+  if (route.name === 'umkm-settings') return 'settings'
+  if (route.name === 'umkm-dashboard') return 'overview'
+  if (route.name === 'umkm-products') return route.hash === '#produk-saya' ? 'products' : 'overview'
+  return ''
+})
 
 const linkClass = (isActive) => [
   'flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition lg:w-full',
@@ -65,26 +72,31 @@ const linkClass = (isActive) => [
           </svg>
         </button>
       </div>
-      <RouterLink :to="{ name: 'umkm-products', hash: '#ringkasan' }" :class="linkClass(active === 'overview')" @click="mobileMenuOpen = false">
+      <RouterLink
+        :to="{ name: 'umkm-dashboard', hash: '#ringkasan' }"
+        :class="linkClass(activeItem === 'overview')"
+        :aria-current="activeItem === 'overview' ? 'page' : undefined"
+        @click="mobileMenuOpen = false"
+      >
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <rect x="3" y="3" width="8" height="8" rx="1.5" /><rect x="13" y="3" width="8" height="5" rx="1.5" />
           <rect x="13" y="10" width="8" height="11" rx="1.5" /><rect x="3" y="13" width="8" height="8" rx="1.5" />
         </svg>
         Ringkasan
       </RouterLink>
-      <RouterLink :to="{ name: 'umkm-products', hash: '#produk-saya' }" :class="linkClass(active === 'products')" :aria-current="active === 'products' ? 'page' : undefined" @click="mobileMenuOpen = false">
+      <RouterLink :to="{ name: 'umkm-products', hash: '#produk-saya' }" :class="linkClass(activeItem === 'products')" :aria-current="activeItem === 'products' ? 'page' : undefined" @click="mobileMenuOpen = false">
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="m3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7M12 11v10" />
         </svg>
         Produk Saya
       </RouterLink>
-      <RouterLink :to="{ name: 'umkm-orders' }" :class="linkClass(active === 'orders')" :aria-current="active === 'orders' ? 'page' : undefined" @click="mobileMenuOpen = false">
+      <RouterLink :to="{ name: 'umkm-orders' }" :class="linkClass(activeItem === 'orders')" :aria-current="activeItem === 'orders' ? 'page' : undefined" @click="mobileMenuOpen = false">
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8Zm4 0a3 3 0 0 1 6 0M8 12h.01M16 12h.01" />
         </svg>
         Pesanan
       </RouterLink>
-      <RouterLink :to="{ name: 'umkm-settings' }" :class="linkClass(active === 'settings')" :aria-current="active === 'settings' ? 'page' : undefined" @click="mobileMenuOpen = false">
+      <RouterLink :to="{ name: 'umkm-settings' }" :class="linkClass(activeItem === 'settings')" :aria-current="activeItem === 'settings' ? 'page' : undefined" @click="mobileMenuOpen = false">
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <circle cx="12" cy="12" r="3" /><path stroke-linecap="round" stroke-linejoin="round" d="m19.4 15 .1.1a1.7 1.7 0 1 1-2.4 2.4L17 17.4a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 1 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 1 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V2a1.7 1.7 0 1 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 1 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z" />
         </svg>
