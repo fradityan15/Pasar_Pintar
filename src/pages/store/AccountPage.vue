@@ -137,7 +137,7 @@ async function hapus(a) {
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl px-4 pb-16 pt-8 sm:px-10">
+  <div class="mx-auto max-w-3xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
     <h1 class="text-3xl font-bold">Akun saya</h1>
 
     <section class="card mt-6 p-5">

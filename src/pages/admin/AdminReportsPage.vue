@@ -91,16 +91,18 @@ const unduh = () =>
         </ol>
       </section>
 
-      <section class="card max-h-80 overflow-auto p-5">
+      <section class="card max-h-80 overflow-y-auto p-4 md:p-5">
         <h2 class="text-base font-semibold">Rincian per hari</h2>
-        <table class="mt-3 w-full text-left text-sm">
-          <thead class="text-xs text-muted"><tr><th class="py-2 font-medium">Tanggal</th><th class="py-2 font-medium">Pesanan</th><th class="py-2 text-right font-medium">Omzet</th></tr></thead>
-          <tbody>
-            <tr v-for="r in [...rows].reverse()" :key="r.tanggal" class="border-t border-line">
-              <td class="py-2">{{ r.tanggal }}</td><td class="py-2">{{ r.jumlah_pesanan }}</td><td class="py-2 text-right">{{ formatRupiah(r.omzet) }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="mt-3 w-full overflow-x-auto">
+          <table class="min-w-[360px] w-full text-left text-sm">
+            <thead class="text-xs text-muted"><tr><th class="py-2 font-medium">Tanggal</th><th class="py-2 font-medium">Pesanan</th><th class="py-2 text-right font-medium">Omzet</th></tr></thead>
+            <tbody>
+              <tr v-for="r in [...rows].reverse()" :key="r.tanggal" class="border-t border-line">
+                <td class="py-2">{{ r.tanggal }}</td><td class="py-2">{{ r.jumlah_pesanan }}</td><td class="py-2 text-right">{{ formatRupiah(r.omzet) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   </template>

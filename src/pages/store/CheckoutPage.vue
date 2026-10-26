@@ -117,7 +117,7 @@ async function buatPesanan() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-8 lg:px-10">
+  <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
     <RouterLink :to="{ name: 'keranjang' }" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-emerald-700">
       <span aria-hidden="true">←</span> Kembali ke keranjang
     </RouterLink>

@@ -18,7 +18,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-10">
+  <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
     <h1 class="text-3xl font-bold">UMKM mitra</h1>
     <p class="mt-2 max-w-xl text-sm text-muted">Kenali pelaku usaha di balik produk yang Anda beli.</p>
 

@@ -78,7 +78,7 @@ function checkout() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-8 lg:px-10">
+  <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
         <p class="text-sm font-medium text-emerald-700">Belanja praktis dari UMKM lokal</p>

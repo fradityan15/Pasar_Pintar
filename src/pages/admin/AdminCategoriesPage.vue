@@ -88,7 +88,7 @@ async function hapus(c) {
     <p v-if="error" class="mb-3 rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ error }}</p>
     <div v-if="loading" class="h-40 animate-pulse rounded-xl bg-surface"></div>
     <p v-else-if="!rows.length" class="rounded-xl bg-surface p-8 text-center text-sm text-muted">Belum ada kategori.</p>
-    <div v-else class="overflow-x-auto">
+    <div v-else class="w-full overflow-x-auto">
       <table class="w-full min-w-[520px] text-left text-sm">
         <thead class="text-xs text-muted"><tr><th class="p-3 font-medium">Nama</th><th class="p-3 font-medium">Slug</th><th class="p-3 font-medium">Status</th><th class="p-3"></th></tr></thead>
         <tbody>

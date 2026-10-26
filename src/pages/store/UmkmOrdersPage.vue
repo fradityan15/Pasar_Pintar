@@ -85,7 +85,7 @@ async function ubahStatus(order, action, successMessage) {
             <p class="mt-1 text-sm text-slate-500">Pesanan untuk produk toko akan muncul di sini.</p>
           </div>
 
-          <div v-else class="overflow-x-auto">
+          <div v-else class="w-full overflow-x-auto">
             <table class="w-full min-w-[850px] text-left text-sm">
               <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>

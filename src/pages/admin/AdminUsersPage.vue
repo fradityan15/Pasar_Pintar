@@ -53,7 +53,7 @@ async function ubahPeran(u, role) {
 <template>
   <AdminPageHeader title="Pengguna" desc="Kelola peran akun. Admin memiliki akses penuh ke panel ini." />
 
-  <div class="card p-5">
+  <div class="card p-4 md:p-6">
     <div class="flex flex-wrap gap-x-5 border-b border-line" role="tablist" aria-label="Filter peran">
       <button
         v-for="[val, label] in tabs" :key="val" type="button" role="tab" :aria-selected="str('role') === val"
@@ -73,7 +73,7 @@ async function ubahPeran(u, role) {
     <p v-if="error" class="mb-3 rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ error }}</p>
     <div v-if="loading" class="h-40 animate-pulse rounded-xl bg-surface"></div>
     <p v-else-if="!items.length" class="rounded-xl bg-surface p-8 text-center text-sm text-muted">Pengguna tidak ditemukan.</p>
-    <div v-else class="overflow-x-auto">
+    <div v-else class="w-full overflow-x-auto">
       <table class="w-full min-w-[560px] text-left text-sm">
         <thead class="text-xs text-muted"><tr><th class="p-3 font-medium">Nama</th><th class="p-3 font-medium">Telepon</th><th class="p-3 font-medium">Bergabung</th><th class="p-3 font-medium">Peran</th></tr></thead>
         <tbody>

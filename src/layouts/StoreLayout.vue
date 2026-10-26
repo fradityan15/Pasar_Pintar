@@ -9,6 +9,7 @@ const auth = useAuthStore()
 const cart = useCartStore()
 const router = useRouter()
 const search = ref('')
+const mobileMenuOpen = ref(false)
 const myUmkm = ref(null)
 const umkmCheckError = ref('')
 let umkmCheckRequest = 0
@@ -60,10 +61,10 @@ function cari() {
 <template>
   <div class="flex min-h-screen flex-col">
     <div class="bg-ink px-4 text-white">
-      <div class="mx-auto flex min-h-9 max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 py-1 text-xs sm:px-10">
+      <div class="relative mx-auto flex min-h-9 max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 py-1 text-xs sm:px-10">
         <p class="hidden text-white/80 sm:block">Produk khas daerah, langsung dari UMKM Indonesia</p>
         <div class="flex items-center gap-1">
-          <nav class="flex items-center gap-1" aria-label="Menu utama">
+          <nav class="hidden items-center gap-1 lg:flex" aria-label="Menu utama">
             <RouterLink
               :to="{ name: 'home' }"
               exact-active-class="bg-white/15 text-white"
@@ -80,7 +81,7 @@ function cari() {
               class="rounded px-3 py-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
             >UMKM</RouterLink>
           </nav>
-          <div v-if="auth.isLoggedIn" class="group relative ml-1">
+          <div v-if="auth.isLoggedIn" class="group relative ml-1 hidden lg:block">
             <RouterLink
               :to="{ name: 'akun' }"
               class="flex items-center gap-2 rounded px-2 py-1 text-white/90 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
@@ -138,12 +139,62 @@ function cari() {
               </button>
             </div>
           </div>
+          <button
+            class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
+            type="button"
+            :aria-expanded="mobileMenuOpen"
+            aria-controls="mobile-navigation"
+            :aria-label="mobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'"
+            @click="mobileMenuOpen = !mobileMenuOpen"
+          >
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <path v-if="mobileMenuOpen" d="m6 6 12 12M18 6 6 18" />
+              <path v-else d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
         </div>
+        <nav
+          v-if="mobileMenuOpen"
+          id="mobile-navigation"
+          class="absolute inset-x-0 top-full z-50 mt-1 rounded-xl border border-line bg-white p-2 text-sm text-ink shadow-lg lg:hidden"
+          aria-label="Navigasi mobile"
+        >
+          <RouterLink v-for="item in [
+            { label: 'Beranda', to: { name: 'home' } },
+            { label: 'Katalog', to: { name: 'katalog' } },
+            { label: 'UMKM', to: { name: 'umkm' } },
+          ]" :key="item.label" :to="item.to" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">
+            {{ item.label }}
+          </RouterLink>
+          <template v-if="auth.isLoggedIn">
+            <div class="my-1 border-t border-line"></div>
+            <RouterLink :to="{ name: 'akun' }" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">Akun Saya</RouterLink>
+            <RouterLink :to="{ name: 'pesanan' }" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">Pesanan</RouterLink>
+            <RouterLink
+              v-if="myUmkm?.status === 'active' && myUmkm.is_active"
+              :to="{ name: 'umkm-products' }"
+              class="block rounded-lg px-3 py-2.5 hover:bg-surface"
+              @click="mobileMenuOpen = false"
+            >Dasbor Penjual</RouterLink>
+            <RouterLink
+              v-if="auth.isAdmin"
+              :to="{ name: 'admin-dashboard' }"
+              class="block rounded-lg px-3 py-2.5 hover:bg-surface"
+              @click="mobileMenuOpen = false"
+            >Panel Admin</RouterLink>
+            <button type="button" class="block w-full rounded-lg px-3 py-2.5 text-left text-bad-fg hover:bg-bad-bg" @click="mobileMenuOpen = false; keluar()">Keluar</button>
+          </template>
+          <template v-else>
+            <div class="my-1 border-t border-line"></div>
+            <RouterLink :to="{ name: 'login' }" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">Masuk</RouterLink>
+            <RouterLink :to="{ name: 'register' }" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">Daftar</RouterLink>
+          </template>
+        </nav>
       </div>
     </div>
 
     <header class="border-b border-line">
-      <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-10 lg:flex-nowrap">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 md:gap-4 md:px-6 lg:flex-nowrap lg:px-8">
         <RouterLink :to="{ name: 'home' }" class="flex shrink-0 items-center gap-2 text-xl font-bold">
           <img src="/logo-pasarpintar.png" alt="" class="h-10 w-10 rounded-lg object-cover" />
           PasarPintar
@@ -175,12 +226,12 @@ function cari() {
           </button>
         </form>
 
-        <div class="ml-auto flex shrink-0 items-center gap-6">
+        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-6">
           <span
             role="img"
             aria-label="Pesan"
             title="Pesan"
-            class="flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-surface hover:text-ink/70"
+            class="hidden h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-surface hover:text-ink/70 sm:flex"
           >
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h16v11H9l-5 3v-14Z" />
@@ -191,7 +242,7 @@ function cari() {
             role="img"
             aria-label="Notifikasi"
             title="Notifikasi"
-            class="flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-surface hover:text-ink/70"
+            class="hidden h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-surface hover:text-ink/70 sm:flex"
           >
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
@@ -211,8 +262,8 @@ function cari() {
             >{{ cart.count }}</span>
           </RouterLink>
           <template v-if="!auth.isLoggedIn">
-            <RouterLink :to="{ name: 'login' }" class="btn-outline">Masuk</RouterLink>
-            <RouterLink :to="{ name: 'register' }" class="btn-primary">Daftar</RouterLink>
+            <RouterLink :to="{ name: 'login' }" class="btn-outline hidden md:inline-flex">Masuk</RouterLink>
+            <RouterLink :to="{ name: 'register' }" class="btn-primary hidden md:inline-flex">Daftar</RouterLink>
           </template>
         </div>
       </div>

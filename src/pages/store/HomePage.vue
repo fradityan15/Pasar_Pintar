@@ -52,7 +52,7 @@ onUnmounted(() => window.clearInterval(autoplay))
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 pb-16 sm:px-10">
+  <div class="mx-auto max-w-7xl px-4 pb-16 md:px-6 lg:px-8">
     <section class="mt-2 grid items-center gap-8 overflow-hidden rounded-2xl bg-surface p-6 sm:p-10 md:grid-cols-2 md:gap-12 md:p-14">
       <div class="flex flex-col items-start gap-5">
         <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gold-dark">Cerita dan produk lokal Indonesia</span>
@@ -167,13 +167,13 @@ onUnmounted(() => window.clearInterval(autoplay))
         Produk belum bisa dimuat: {{ error }}
         <button class="ml-2 font-semibold underline" type="button" @click="load">Coba lagi</button>
       </p>
-      <div v-else-if="loading" class="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div v-else-if="loading" class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
         <div v-for="n in 4" :key="n" class="aspect-square animate-pulse rounded-[14px] bg-surface"></div>
       </div>
       <p v-else-if="!products.length" class="rounded-xl bg-surface p-6 text-sm text-muted">
         Belum ada produk aktif. Produk akan muncul setelah UMKM menambahkan produk dan mengaktifkannya.
       </p>
-      <div v-else class="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div v-else class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
         <ProductCard v-for="p in products" :key="p.id" :product="p" />
       </div>
     </section>

@@ -68,7 +68,7 @@ const batal = () => {
 
 <template>
   <div class="min-h-screen bg-slate-50">
-    <div class="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-8 lg:px-10">
+    <div class="mx-auto max-w-6xl px-4 pb-16 pt-6 md:px-6 lg:px-8">
       <RouterLink :to="{ name: 'pesanan' }" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-emerald-700">← Semua pesanan</RouterLink>
 
       <div v-if="loading" class="mt-6 h-64 animate-pulse rounded-2xl bg-white shadow-sm"></div>

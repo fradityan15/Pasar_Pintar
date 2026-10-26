@@ -27,7 +27,7 @@ watch(() => route.params.slug, load, { immediate: true })
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-10">
+  <div class="mx-auto max-w-7xl px-4 pb-16 pt-6 md:px-6 lg:px-8">
     <RouterLink :to="{ name: 'umkm' }" class="text-sm font-medium text-muted">← Semua UMKM</RouterLink>
 
     <div v-if="loading" class="mt-6 h-40 animate-pulse rounded-2xl bg-surface"></div>
@@ -37,7 +37,7 @@ watch(() => route.params.slug, load, { immediate: true })
     <p v-else-if="!umkm" class="mt-6 rounded-xl bg-surface p-8 text-center font-semibold">UMKM tidak ditemukan</p>
 
     <template v-else>
-      <section class="mt-4 rounded-2xl bg-surface p-6 sm:p-8">
+      <section class="mt-4 rounded-2xl bg-surface p-4 md:p-6 lg:p-8">
         <h1 class="flex flex-wrap items-center gap-3 text-3xl font-bold">
           {{ umkm.name }}
           <span v-if="umkm.is_verified" class="badge bg-ok-bg text-ok-fg">Terverifikasi</span>
@@ -49,7 +49,7 @@ watch(() => route.params.slug, load, { immediate: true })
 
       <h2 class="mb-4 mt-8 text-xl font-semibold">Produk dari {{ umkm.name }}</h2>
       <p v-if="!products.length" class="rounded-xl bg-surface p-6 text-sm text-muted">Belum ada produk aktif dari UMKM ini.</p>
-      <div v-else class="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div v-else class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
         <ProductCard v-for="p in products" :key="p.id" :product="p" />
       </div>
     </template>

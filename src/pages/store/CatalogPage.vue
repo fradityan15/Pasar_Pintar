@@ -54,7 +54,7 @@ watch(() => route.query, load, { immediate: true, deep: true })
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-10">
+  <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
     <h1 class="text-3xl font-bold">Katalog</h1>
 
     <form class="mt-5 flex gap-3" role="search" @submit.prevent="setQuery({ q: search.trim(), page: 1 })">
@@ -86,7 +86,7 @@ watch(() => route.query, load, { immediate: true, deep: true })
       Produk belum bisa dimuat: {{ error }}
       <button class="ml-2 font-semibold underline" type="button" @click="load">Coba lagi</button>
     </p>
-    <div v-else-if="loading" class="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div v-else-if="loading" class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
       <div v-for="n in 8" :key="n" class="aspect-square animate-pulse rounded-[14px] bg-surface"></div>
     </div>
     <div v-else-if="!items.length" class="mt-6 rounded-xl bg-surface p-8 text-center">
@@ -95,7 +95,7 @@ watch(() => route.query, load, { immediate: true, deep: true })
     </div>
     <template v-else>
       <p class="mt-6 text-sm text-muted">{{ total }} produk</p>
-      <div class="mt-3 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div class="mt-3 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
         <ProductCard v-for="p in items" :key="p.id" :product="p" />
       </div>
       <nav v-if="totalPages > 1" class="mt-8 flex items-center justify-center gap-4 text-sm" aria-label="Halaman">

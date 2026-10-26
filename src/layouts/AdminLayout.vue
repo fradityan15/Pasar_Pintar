@@ -85,6 +85,7 @@ async function keluar() {
           :title="!sidebarVisible ? item.label : undefined"
           :aria-label="!sidebarVisible ? item.label : undefined"
           active-class="!bg-white !font-semibold !text-ink shadow-sm"
+          @click="mobileSidebarOpen = false"
         >
           <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="item.icon" /></svg>
           <span v-if="sidebarVisible">{{ item.label }}</span>
@@ -105,7 +106,7 @@ async function keluar() {
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <header class="flex items-center justify-between gap-3 px-4 py-4 sm:px-7">
+      <header class="flex items-center justify-between gap-3 px-4 py-4 md:px-6 lg:px-8">
         <div class="flex items-center gap-3">
           <button
             class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-white lg:hidden"
@@ -128,7 +129,7 @@ async function keluar() {
           <button class="btn-outline" type="button" @click="keluar">Keluar</button>
         </div>
       </header>
-      <main class="flex-1 px-4 pb-10 sm:px-7"><RouterView /></main>
+      <main class="flex-1 px-4 pb-10 md:px-6 lg:px-8"><RouterView /></main>
     </div>
   </div>
 </template>

@@ -100,7 +100,7 @@ async function lihatDetail(product) {
     </p>
     <div v-else-if="loading" class="h-40 animate-pulse rounded-xl bg-surface"></div>
     <p v-else-if="!items.length" class="rounded-xl bg-surface p-8 text-center text-sm text-muted">Belum ada produk untuk filter ini.</p>
-    <div v-else class="overflow-x-auto">
+    <div v-else class="w-full overflow-x-auto">
       <table class="w-full min-w-[760px] text-left text-sm">
         <thead class="text-xs text-muted">
           <tr><th class="p-3 font-medium">Produk</th><th class="p-3 font-medium">Kategori</th><th class="p-3 font-medium">UMKM</th><th class="p-3 font-medium">Harga</th><th class="p-3 font-medium">Stok</th><th class="p-3 font-medium">Status</th><th class="p-3"></th></tr>

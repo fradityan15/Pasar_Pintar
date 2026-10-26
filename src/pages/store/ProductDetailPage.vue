@@ -84,7 +84,7 @@ async function beliSekarang() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-10">
+  <div class="mx-auto max-w-7xl px-4 pb-16 pt-6 md:px-6 lg:px-8">
     <RouterLink :to="{ name: 'katalog' }" class="text-sm font-medium text-muted">← Kembali ke katalog</RouterLink>
 
     <Teleport to="body">

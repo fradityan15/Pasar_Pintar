@@ -191,7 +191,7 @@ async function bersihkan() {
     </p>
     <div v-else-if="loading" class="h-40 animate-pulse rounded-xl bg-surface"></div>
     <p v-else-if="!items.length" class="rounded-xl bg-surface p-8 text-center text-sm text-muted">Tidak ada pesanan untuk filter ini.</p>
-    <div v-else class="overflow-x-auto">
+    <div v-else class="w-full overflow-x-auto">
       <table class="w-full min-w-[980px] text-left text-sm">
         <thead class="text-xs text-muted">
           <tr><th class="p-3 font-medium">No. pesanan</th><th class="p-3 font-medium">Pelanggan</th><th class="p-3 font-medium">Mitra UMKM</th><th class="p-3 font-medium">Tanggal</th><th class="p-3 font-medium">Total</th><th class="p-3 font-medium">Pembayaran</th><th class="p-3 font-medium">Status</th><th class="p-3"></th></tr>

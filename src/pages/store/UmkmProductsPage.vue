@@ -351,7 +351,7 @@ async function hapusProduk(product) {
             </div>
           </div>
 
-          <div v-if="products.length" class="mt-4 overflow-x-auto">
+          <div v-if="products.length" class="mt-4 w-full overflow-x-auto">
             <table class="w-full min-w-[760px] text-left text-sm">
               <thead>
                 <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">

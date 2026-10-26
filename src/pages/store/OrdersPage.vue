@@ -24,7 +24,7 @@ const ringkas = (o) => o.order_items.map((i) => `${i.product_name} × ${i.quanti
 </script>
 
 <template>
-  <div class="mx-auto max-w-4xl px-4 pb-16 pt-8 sm:px-10">
+  <div class="mx-auto max-w-4xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
     <h1 class="text-3xl font-bold">Pesanan saya</h1>
 
     <p v-if="error" class="mt-4 rounded-xl bg-bad-bg p-4 text-sm text-bad-fg" role="alert">

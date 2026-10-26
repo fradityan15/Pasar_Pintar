@@ -100,7 +100,7 @@ async function setujuiPendaftaran(u) {
     <p v-if="error" class="mb-3 rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ error }}</p>
     <div v-if="loading" class="h-40 animate-pulse rounded-xl bg-surface"></div>
     <p v-else-if="!items.length" class="rounded-xl bg-surface p-8 text-center text-sm text-muted">Belum ada UMKM.</p>
-    <div v-else class="overflow-x-auto">
+    <div v-else class="w-full overflow-x-auto">
       <table class="w-full min-w-[760px] text-left text-sm">
         <thead class="text-xs text-muted"><tr><th class="p-3 font-medium">Nama</th><th class="p-3 font-medium">Daerah</th><th class="p-3 font-medium">Telepon</th><th class="p-3 font-medium">Verifikasi</th><th class="p-3 font-medium">Pendaftaran</th><th class="p-3 font-medium">Toko</th><th class="p-3"></th></tr></thead>
         <tbody>
