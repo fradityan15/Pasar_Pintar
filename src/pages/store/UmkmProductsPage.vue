@@ -2,23 +2,21 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import SellerDashboardSidebar from '@/components/SellerDashboardSidebar.vue'
-import { CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Tooltip } from 'chart.js'
-import { Line } from 'vue-chartjs'
 import { listCategories } from '@/services/catalogService'
 import { deleteImage, uploadImage } from '@/services/adminProductService'
-import { deleteMyUmkmProduct, getMyUmkm, getMyUmkmDashboardMetrics, listMyUmkmProducts, saveMyUmkmProduct } from '@/services/umkmPartnerService'
+import { deleteMyUmkmProduct, getMyUmkm, listMyUmkmProducts, saveMyUmkmProduct } from '@/services/umkmPartnerService'
 import { formatRupiah } from '@/lib/format'
 import { slugify } from '@/lib/slug'
 
 const umkm = ref(null)
 const products = ref([])
 const categories = ref([])
-const metrics = ref(null)
 const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
 const notice = ref('')
 const search = ref('')
+const stockFilter = ref('all')
 const formOpen = ref(false)
 const editingId = ref(null)
 const formError = ref('')
@@ -26,63 +24,15 @@ const savedImages = ref([])
 const pendingImages = ref([])
 const form = reactive({ name: '', slug: '', description: '', category_id: '', price: 0, stock: 0, is_active: true })
 const slugTouched = ref(false)
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
-
-const totalPendapatan = computed(() => Number(metrics.value?.total_pendapatan ?? 0))
-const pesananBaru = computed(() => Number(metrics.value?.pesanan_baru ?? 0))
-const salesChartData = computed(() => ({
-  labels: (metrics.value?.pendapatan_harian ?? []).map((item) => new Intl.DateTimeFormat('id-ID', {
-    weekday: 'short',
-    timeZone: 'UTC',
-  }).format(new Date(`${item.tanggal}T00:00:00Z`))),
-  datasets: [{
-    label: 'Pendapatan',
-    data: (metrics.value?.pendapatan_harian ?? []).map((item) => Number(item.omzet)),
-    borderColor: '#047857',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    pointBackgroundColor: '#047857',
-    pointBorderColor: '#ffffff',
-    pointBorderWidth: 2,
-    pointRadius: 4,
-    pointHoverRadius: 6,
-    borderWidth: 3,
-    fill: true,
-    tension: 0.35,
-  }],
-}))
-const salesChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: { intersect: false, mode: 'index' },
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      callbacks: {
-        label: (context) => `${context.dataset.label}: ${formatRupiah(context.parsed.y)}`,
-      },
-    },
-  },
-  scales: {
-    x: {
-      grid: { display: false },
-      ticks: { color: '#64748b' },
-      border: { display: false },
-    },
-    y: {
-      beginAtZero: true,
-      ticks: { color: '#64748b', callback: (value) => formatRupiah(value) },
-      grid: { color: '#e2e8f0', borderDash: [4, 4] },
-      border: { display: false },
-    },
-  },
-}
 const filteredProducts = computed(() => {
   const query = search.value.trim().toLocaleLowerCase('id')
-  if (!query) return products.value
   return products.value.filter((product) =>
-    [product.name, product.description, product.categories?.name]
+    (stockFilter.value === 'all'
+      || (stockFilter.value === 'active' && product.is_active && Number(product.stock) > 0)
+      || (stockFilter.value === 'out' && Number(product.stock) <= 0))
+    && (!query || [product.name, product.description, product.categories?.name]
       .filter(Boolean)
-      .some((value) => value.toLocaleLowerCase('id').includes(query)),
+      .some((value) => value.toLocaleLowerCase('id').includes(query))),
   )
 })
 
@@ -97,15 +47,9 @@ async function load() {
     umkm.value = await getMyUmkm()
     categories.value = await listCategories()
     if (umkm.value?.status === 'active' && umkm.value.is_active) {
-      const [myProducts, dashboardMetrics] = await Promise.all([
-        listMyUmkmProducts(umkm.value.id),
-        getMyUmkmDashboardMetrics(umkm.value.id),
-      ])
-      products.value = myProducts
-      metrics.value = dashboardMetrics
+      products.value = await listMyUmkmProducts(umkm.value.id)
     } else {
       products.value = []
-      metrics.value = null
     }
   } catch (e) {
     error.value = e.message
@@ -190,9 +134,14 @@ async function simpanProduk() {
   notice.value = ''
   const wasEditing = Boolean(editingId.value)
   try {
+    const name = form.name.trim()
+    const slug = form.slug.trim()
+    if (!name) throw new Error('Nama produk wajib diisi.')
+    if (!slug) throw new Error('Slug produk wajib diisi.')
+
     const fields = {
-      name: form.name.trim(),
-      slug: form.slug.trim(),
+      name,
+      slug,
       description: form.description.trim() || null,
       category_id: form.category_id || null,
       price: Number(form.price),
@@ -231,6 +180,19 @@ async function hapusProduk(product) {
     error.value = e.message
   }
 }
+
+function duplikatProduk(product) {
+  const slugSuffix = Date.now().toString(36)
+  bukaForm({
+    ...product,
+    id: null,
+    name: `${product.name} (salinan)`,
+    slug: `${product.slug}-salinan-${slugSuffix}`,
+    product_images: [],
+  })
+  savedImages.value = []
+  notice.value = 'Salinan produk disiapkan tanpa foto. Simpan untuk membuat produk baru.'
+}
 </script>
 
 <template>
@@ -239,108 +201,51 @@ async function hapusProduk(product) {
 
     <main class="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div class="mx-auto max-w-7xl">
-        <section id="ringkasan" class="scroll-mt-6">
+        <section id="produk-saya" class="scroll-mt-6">
           <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p class="text-sm font-medium text-emerald-700">Dasbor penjual</p>
-              <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Ringkasan Toko</h1>
-              <p class="mt-1.5 text-sm text-slate-500">Pantau produk dan aktivitas toko {{ umkm?.name || 'Anda' }}.</p>
+              <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Produk Saya</h1>
+              <p class="mt-1.5 text-sm text-slate-500">Kelola katalog, harga, dan stok produk {{ umkm?.name || 'toko Anda' }}.</p>
             </div>
-            <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-              <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-              Toko aktif
-            </span>
+            <RouterLink :to="{ name: 'umkm-dashboard' }" class="text-sm font-semibold text-emerald-700 hover:text-emerald-800">Lihat ringkasan →</RouterLink>
           </div>
-
           <p v-if="notice" class="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{{ notice }}</p>
           <p v-if="error" class="mt-5 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700" role="alert">
             {{ error }}
             <button class="ml-1 font-semibold underline" type="button" @click="load">Coba lagi</button>
           </p>
-
           <div v-if="loading" class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <div v-for="n in 3" :key="n" class="h-32 animate-pulse rounded-xl bg-white shadow-sm ring-1 ring-slate-200"></div>
+            <div v-for="n in 3" :key="n" class="h-64 animate-pulse rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"></div>
           </div>
           <div v-else-if="!umkm" class="mt-6 rounded-xl border border-slate-200 bg-white p-6">
             <p class="font-semibold text-slate-900">Data UMKM tidak ditemukan.</p>
             <RouterLink :to="{ name: 'akun' }" class="mt-2 inline-block text-sm font-semibold text-emerald-700 underline">Periksa pendaftaran di halaman akun</RouterLink>
           </div>
           <div v-else-if="umkm.status !== 'active' || !umkm.is_active" class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900" role="status">
-            Pendaftaran UMKM belum aktif. Fitur pengelolaan produk tersedia setelah Admin PasarPintar menyetujui pendaftaran.
+            Pengelolaan produk tersedia setelah Admin PasarPintar menyetujui dan mengaktifkan toko.
           </div>
-          <template v-else>
-            <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <p class="text-sm font-medium text-slate-500">Total Produk</p>
-                    <p class="mt-3 text-3xl font-bold tracking-tight text-slate-900">{{ products.length }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Produk di toko Anda</p>
-                  </div>
-                  <span class="rounded-lg bg-blue-50 p-2.5 text-blue-700">
-                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7M12 11v10" />
-                    </svg>
-                  </span>
-                </div>
-              </article>
-              <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <p class="text-sm font-medium text-slate-500">Pesanan Baru</p>
-                    <p class="mt-3 text-3xl font-bold tracking-tight text-slate-900">{{ pesananBaru }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Pesanan menunggu diproses</p>
-                  </div>
-                  <span class="rounded-lg bg-amber-50 p-2.5 text-amber-700">
-                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8Zm4 0a3 3 0 0 1 6 0M8 12h.01M16 12h.01" />
-                    </svg>
-                  </span>
-                </div>
-              </article>
-              <article class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <p class="text-sm font-medium text-slate-500">Total Pendapatan</p>
-                    <p class="mt-3 text-2xl font-bold tracking-tight text-slate-900">{{ formatRupiah(totalPendapatan) }}</p>
-                    <p class="mt-1 text-xs text-slate-500">Akumulasi penjualan</p>
-                  </div>
-                  <span class="rounded-lg bg-emerald-50 p-2.5 text-emerald-700">
-                    <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true">
-                      <text x="12" y="16" fill="currentColor" font-size="10" font-weight="700" text-anchor="middle">Rp</text>
-                    </svg>
-                  </span>
-                </div>
-              </article>
-            </div>
-            <section class="mt-6 w-full rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6" aria-labelledby="sales-chart-title">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 id="sales-chart-title" class="text-lg font-semibold text-slate-900">Pendapatan 7 Hari Terakhir</h2>
-                  <p class="mt-1 text-sm text-slate-500">Visualisasi pendapatan harian toko.</p>
-                </div>
-              </div>
-              <p v-if="!metrics?.pendapatan_harian?.some((item) => Number(item.omzet) > 0)" class="mt-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">Belum ada pendapatan pada tujuh hari terakhir.</p>
-              <div v-else class="mt-5 h-[300px]">
-                <Line :data="salesChartData" :options="salesChartOptions" />
-              </div>
-            </section>
-          </template>
-        </section>
-
-        <section v-if="umkm?.status === 'active' && umkm.is_active" id="produk-saya" class="mt-8 scroll-mt-6 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
+          <section v-else class="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6">
           <div class="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Produk Saya</h2>
-              <p class="mt-1 text-sm text-slate-500">Kelola katalog, harga, dan stok produk toko.</p>
+              <h2 class="text-lg font-semibold text-slate-900">Katalog produk</h2>
+              <p class="mt-1 text-sm text-slate-500">{{ filteredProducts.length }} dari {{ products.length }} produk</p>
             </div>
-            <div class="flex flex-col gap-3 sm:flex-row">
+            <div class="grid gap-3 sm:grid-cols-[minmax(14rem,1fr)_10rem_auto]">
               <label class="relative block sm:w-64">
                 <span class="sr-only">Cari produk</span>
                 <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <circle cx="11" cy="11" r="7" /><path stroke-linecap="round" d="m16 16 4 4" />
                 </svg>
                 <input v-model="search" class="min-h-11 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100" type="search" placeholder="Cari nama produk..." />
+              </label>
+              <label class="block">
+                <span class="sr-only">Filter produk</span>
+                <select v-model="stockFilter" class="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100">
+                  <option value="all">Semua produk</option>
+                  <option value="active">Aktif</option>
+                  <option value="out">Habis</option>
+                </select>
               </label>
               <button class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2" type="button" @click="bukaForm()">
                 <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -351,59 +256,30 @@ async function hapusProduk(product) {
             </div>
           </div>
 
-          <div v-if="products.length" class="mt-4 w-full overflow-x-auto">
-            <table class="w-full min-w-[760px] text-left text-sm">
-              <thead>
-                <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                  <th class="px-3 py-3 font-semibold">Produk</th>
-                  <th class="px-3 py-3 font-semibold">Kategori</th>
-                  <th class="px-3 py-3 font-semibold">Harga</th>
-                  <th class="px-3 py-3 font-semibold">Stok</th>
-                  <th class="px-3 py-3 font-semibold">Status</th>
-                  <th class="px-3 py-3 text-right font-semibold">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="product in filteredProducts" :key="product.id" class="border-b border-slate-100 transition last:border-0 hover:bg-slate-50/80">
-                  <td class="px-3 py-4">
-                    <div class="flex items-center gap-3">
-                      <img
-                        v-if="product.product_images?.[0]?.url"
-                        :src="product.product_images[0].url"
-                        :alt="product.name"
-                        class="h-11 w-11 rounded-lg object-cover"
-                      />
-                      <span v-else class="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
-                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-                          <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path stroke-linecap="round" stroke-linejoin="round" d="m21 15-5-5L5 21" />
-                        </svg>
-                      </span>
-                      <div class="min-w-0">
-                        <p class="truncate font-semibold text-slate-900">{{ product.name }}</p>
-                        <p class="mt-0.5 max-w-xs truncate text-xs text-slate-500">{{ product.description || 'Tanpa deskripsi' }}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-3 py-4 text-slate-600">{{ product.categories?.name || 'Tanpa kategori' }}</td>
-                  <td class="px-3 py-4 font-medium text-slate-800">{{ formatRupiah(product.price) }}</td>
-                  <td class="px-3 py-4 text-slate-600">{{ product.stock }}</td>
-                  <td class="px-3 py-4">
-                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium" :class="product.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'">
-                      <span class="h-1.5 w-1.5 rounded-full" :class="product.is_active ? 'bg-emerald-500' : 'bg-slate-400'"></span>
-                      {{ product.is_active ? 'Aktif' : 'Nonaktif' }}
-                    </span>
-                  </td>
-                  <td class="whitespace-nowrap px-3 py-4 text-right">
-                    <button class="rounded-md px-2 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50" type="button" @click="bukaForm(product)">Ubah</button>
-                    <button class="rounded-md px-2 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50" type="button" @click="hapusProduk(product)">Hapus</button>
-                  </td>
-                </tr>
-                <tr v-if="!filteredProducts.length">
-                  <td colspan="6" class="px-3 py-10 text-center text-sm text-slate-500">Tidak ada produk yang cocok dengan pencarian.</td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-if="filteredProducts.length" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <article v-for="product in filteredProducts" :key="product.id" class="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg">
+              <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                <img v-if="product.product_images?.[0]?.url" :src="product.product_images[0].url" :alt="product.name" class="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                <div v-else class="flex h-full items-center justify-center text-slate-400">
+                  <svg viewBox="0 0 24 24" class="h-12 w-12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path stroke-linecap="round" stroke-linejoin="round" d="m21 15-5-5L5 21" /></svg>
+                </div>
+                <span class="absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold" :class="Number(product.stock) > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'">{{ Number(product.stock) > 0 ? `Tersedia · ${product.stock}` : 'Habis' }}</span>
+                <span v-if="!product.is_active" class="absolute right-3 top-3 rounded-full bg-slate-800/80 px-3 py-1 text-xs font-semibold text-white">Nonaktif</span>
+              </div>
+              <div class="p-4">
+                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ product.categories?.name || 'Tanpa kategori' }}</p>
+                <h3 class="mt-1 truncate text-lg font-bold text-slate-900">{{ product.name }}</h3>
+                <p class="mt-1 min-h-10 line-clamp-2 text-sm text-slate-500">{{ product.description || 'Tanpa deskripsi' }}</p>
+                <p class="mt-3 text-lg font-bold text-emerald-700">{{ formatRupiah(product.price) }}</p>
+                <div class="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                  <button class="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100" type="button" @click="bukaForm(product)">Ubah</button>
+                  <button class="rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800 transition hover:bg-blue-100" type="button" @click="duplikatProduk(product)">Duplikat</button>
+                  <button class="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100" type="button" @click="hapusProduk(product)">Hapus</button>
+                </div>
+              </div>
+            </article>
           </div>
+          <div v-else-if="products.length" class="py-12 text-center text-sm text-slate-500">Tidak ada produk yang cocok dengan pencarian atau filter.</div>
           <div v-else class="py-12 text-center">
             <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
               <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
@@ -414,6 +290,7 @@ async function hapusProduk(product) {
             <p class="mt-1 text-sm text-slate-500">Tambahkan produk pertama untuk mulai mengisi katalog toko.</p>
             <button class="mt-4 text-sm font-semibold text-emerald-700 hover:text-emerald-800" type="button" @click="bukaForm()">Tambah produk pertama</button>
           </div>
+          </section>
         </section>
 
         <section v-if="formOpen" class="mt-6 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">

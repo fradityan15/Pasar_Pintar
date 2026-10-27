@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 
 const PRODUCT_FIELDS =
-  'id, name, slug, price, stock, umkm(name, regions(name)), product_images(url, sort_order)'
+  'id, name, slug, price, stock, is_active, umkm(id, name, slug, regions(name)), product_images(url, sort_order)'
 
 function check({ data, error, count }) {
   if (error) throw new Error(error.message)
@@ -47,7 +47,7 @@ export async function listFeatured(limit = 8) {
 export async function getProductBySlug(slug) {
   const { data, error } = await supabase
     .from('products')
-    .select('id, name, slug, description, price, stock, weight_gram, umkm(name, slug, logo_url, description, is_verified, regions(name, province)), categories(name), product_images(url, sort_order)')
+    .select('id, name, slug, description, price, stock, weight_gram, is_active, umkm(id, name, slug, logo_url, description, is_verified, regions(name, province)), categories(name), product_images(url, sort_order)')
     .eq('slug', slug)
     .eq('is_active', true)
     .maybeSingle()

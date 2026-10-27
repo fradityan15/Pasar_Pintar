@@ -49,3 +49,5 @@ export const setOrderStatus = (id, status, note = null) =>
   rpc('admin_update_order_status', { p_order_id: id, p_status: status, p_note: note })
 export const cancelOrderAdmin = (id, reason) => rpc('cancel_order', { p_order_id: id, p_reason: reason })
 export const expireUnpaidOrders = () => rpc('expire_unpaid_orders')
+export const confirmOrderPaymentAdmin = (id, note = null) =>
+  rpc('admin_confirm_order_payment', { p_order_id: id, p_note: note })

@@ -19,6 +19,18 @@ const form = reactive({
 const loading = ref(false)
 const error = ref('')
 
+function sanitizeNumeric(field, event) {
+  const value = event.target.value.replace(/\D/g, '')
+  event.target.value = value
+  form[field] = value
+}
+
+function sanitizeText(field, event) {
+  const value = event.target.value.replace(/[^a-zA-Z\s]/g, '')
+  event.target.value = value
+  form[field] = value
+}
+
 async function submit() {
   loading.value = true
   error.value = ''
@@ -45,19 +57,19 @@ async function submit() {
     </div>
     <div>
       <label for="a-hp" class="mb-1.5 block text-sm font-medium">Nomor telepon</label>
-      <input id="a-hp" v-model="form.phone" class="input" type="tel" autocomplete="tel" required />
+      <input id="a-hp" :value="form.phone" class="input" type="tel" autocomplete="tel" required @input="sanitizeNumeric('phone', $event)" />
     </div>
     <div>
       <label for="a-pos" class="mb-1.5 block text-sm font-medium">Kode pos (opsional)</label>
-      <input id="a-pos" v-model="form.postal_code" class="input" inputmode="numeric" />
+      <input id="a-pos" :value="form.postal_code" class="input" inputmode="numeric" @input="sanitizeNumeric('postal_code', $event)" />
     </div>
     <div>
       <label for="a-prov" class="mb-1.5 block text-sm font-medium">Provinsi</label>
-      <input id="a-prov" v-model="form.province" class="input" required />
+      <input id="a-prov" :value="form.province" class="input" required @input="sanitizeText('province', $event)" />
     </div>
     <div>
       <label for="a-kota" class="mb-1.5 block text-sm font-medium">Kota / kabupaten</label>
-      <input id="a-kota" v-model="form.city" class="input" required />
+      <input id="a-kota" :value="form.city" class="input" required @input="sanitizeText('city', $event)" />
     </div>
     <div class="sm:col-span-2">
       <label for="a-jalan" class="mb-1.5 block text-sm font-medium">Alamat lengkap</label>

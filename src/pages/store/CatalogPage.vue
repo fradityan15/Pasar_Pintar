@@ -1,12 +1,14 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ProductCard from '@/components/ProductCard.vue'
 import { listCategories, listProducts } from '@/services/catalogService'
+import { useCartStore } from '@/stores/cart'
 
 const PAGE_SIZE = 12
 const route = useRoute()
 const router = useRouter()
+const cart = useCartStore()
 
 const categories = ref([])
 const items = ref([])
@@ -14,7 +16,11 @@ const total = ref(0)
 const loading = ref(true)
 const error = ref('')
 const search = ref(String(route.query.q ?? ''))
+const addingProductId = ref('')
+const toast = ref('')
+const toastError = ref(false)
 let requestId = 0
+let toastTimeout
 
 const q = computed(() => String(route.query.q ?? ''))
 const slug = computed(() => String(route.query.kategori ?? ''))
@@ -51,6 +57,27 @@ async function load() {
 }
 
 watch(() => route.query, load, { immediate: true, deep: true })
+
+onBeforeUnmount(() => clearTimeout(toastTimeout))
+
+function showToast(message, isError = false) {
+  clearTimeout(toastTimeout)
+  toast.value = message
+  toastError.value = isError
+  toastTimeout = setTimeout(() => { toast.value = '' }, 4000)
+}
+
+async function addToCart(product) {
+  addingProductId.value = product.id
+  try {
+    await cart.add(product, 1)
+    showToast(`${product.name} ditambahkan ke keranjang.`)
+  } catch (e) {
+    showToast(`Produk gagal ditambahkan: ${e.message}`, true)
+  } finally {
+    addingProductId.value = ''
+  }
+}
 </script>
 
 <template>
@@ -86,8 +113,13 @@ watch(() => route.query, load, { immediate: true, deep: true })
       Produk belum bisa dimuat: {{ error }}
       <button class="ml-2 font-semibold underline" type="button" @click="load">Coba lagi</button>
     </p>
-    <div v-else-if="loading" class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
-      <div v-for="n in 8" :key="n" class="aspect-square animate-pulse rounded-[14px] bg-surface"></div>
+    <div v-else-if="loading" class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5" aria-label="Memuat produk" aria-busy="true">
+      <div v-for="n in 8" :key="n" class="animate-pulse">
+        <div class="aspect-square rounded-[14px] bg-slate-200"></div>
+        <div class="mt-3 h-4 w-4/5 rounded bg-slate-200"></div>
+        <div class="mt-2 h-3 w-2/3 rounded bg-slate-200"></div>
+        <div class="mt-3 h-4 w-1/2 rounded bg-slate-200"></div>
+      </div>
     </div>
     <div v-else-if="!items.length" class="mt-6 rounded-xl bg-surface p-8 text-center">
       <p class="font-semibold">Produk tidak ditemukan</p>
@@ -96,7 +128,7 @@ watch(() => route.query, load, { immediate: true, deep: true })
     <template v-else>
       <p class="mt-6 text-sm text-muted">{{ total }} produk</p>
       <div class="mt-3 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
-        <ProductCard v-for="p in items" :key="p.id" :product="p" />
+        <ProductCard v-for="p in items" :key="p.id" :product="p" :adding="addingProductId === p.id" @add="addToCart" />
       </div>
       <nav v-if="totalPages > 1" class="mt-8 flex items-center justify-center gap-4 text-sm" aria-label="Halaman">
         <button class="btn-outline" type="button" :disabled="page <= 1" @click="setQuery({ page: page - 1 })">Sebelumnya</button>
@@ -104,5 +136,24 @@ watch(() => route.query, load, { immediate: true, deep: true })
         <button class="btn-outline" type="button" :disabled="page >= totalPages" @click="setQuery({ page: page + 1 })">Berikutnya</button>
       </nav>
     </template>
+
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="translate-y-2 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="translate-y-0 opacity-100"
+        leave-to-class="translate-y-2 opacity-0"
+      >
+        <p
+          v-if="toast"
+          class="fixed right-4 top-4 z-50 max-w-sm rounded-xl border p-4 text-sm shadow-lg sm:right-6 sm:top-6"
+          :class="toastError ? 'border-red-200 bg-white text-red-800' : 'border-emerald-200 bg-white text-emerald-800'"
+          role="status"
+          aria-live="polite"
+        >{{ toast }}</p>
+      </Transition>
+    </Teleport>
   </div>
 </template>

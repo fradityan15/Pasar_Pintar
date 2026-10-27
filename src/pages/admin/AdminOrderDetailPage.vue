@@ -4,7 +4,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import OrderTracking from '@/components/OrderTracking.vue'
 import ModalDialog from '@/components/ModalDialog.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { cancelOrderAdmin, getOrderAdmin, setOrderStatus } from '@/services/adminOrderService'
+import { cancelOrderAdmin, confirmOrderPaymentAdmin, getOrderAdmin, setOrderStatus } from '@/services/adminOrderService'
 import { formatRupiah } from '@/lib/format'
 import { PAYMENT_METHOD } from '@/lib/status'
 
@@ -17,6 +17,8 @@ const busy = ref(false)
 const note = ref('')
 const cancelOpen = ref(false)
 const reason = ref('')
+const paymentConfirmOpen = ref(false)
+const paymentReference = ref('')
 
 const addr = computed(() => order.value?.shipping_address ?? {})
 const status = computed(() => order.value?.status)
@@ -39,16 +41,28 @@ async function run(fn, pesan) {
     info.value = pesan
     note.value = ''
     order.value = await getOrderAdmin(route.params.id)
+    return true
   } catch (e) {
     error.value = e.message
+    return false
   } finally {
     busy.value = false
   }
 }
 const kirim = () => run(() => setOrderStatus(order.value.id, 'dikirim', note.value.trim() || null), 'Status diubah menjadi Dikirim.')
 const selesai = () => run(() => setOrderStatus(order.value.id, 'selesai', note.value.trim() || null), 'Pesanan ditandai Selesai.')
+async function konfirmasiPembayaran() {
+  const success = await run(
+    () => confirmOrderPaymentAdmin(order.value.id, paymentReference.value.trim() || null),
+    'Pembayaran diverifikasi dan pesanan diteruskan ke penjual.',
+  )
+  if (!success) return
+  paymentConfirmOpen.value = false
+  paymentReference.value = ''
+}
 async function batalkan() {
-  await run(() => cancelOrderAdmin(order.value.id, reason.value.trim()), 'Pesanan dibatalkan dan stok dikembalikan.')
+  const success = await run(() => cancelOrderAdmin(order.value.id, reason.value.trim()), 'Pesanan dibatalkan dan stok dikembalikan.')
+  if (!success) return
   cancelOpen.value = false
   reason.value = ''
 }
@@ -77,6 +91,13 @@ async function batalkan() {
       <button v-if="status === 'diproses'" class="btn-primary" type="button" :disabled="busy" @click="kirim">Tandai dikirim</button>
       <button v-if="status === 'dikirim'" class="btn-primary" type="button" :disabled="busy" @click="selesai">Tandai selesai</button>
       <button v-if="['menunggu_pembayaran', 'diproses'].includes(status)" class="btn border border-bad-fg text-bad-fg" type="button" :disabled="busy" @click="cancelOpen = true">Batalkan pesanan</button>
+      <button
+        v-if="status === 'menunggu_pembayaran' && order.payment_status !== 'dibayar' && order.payment_methods?.category !== 'cod' && order.payment_method !== 'cod'"
+        class="btn-primary"
+        type="button"
+        :disabled="busy"
+        @click="paymentConfirmOpen = true"
+      >Verifikasi pembayaran</button>
     </section>
 
     <div class="mt-4 grid gap-4 lg:grid-cols-[1fr_340px]">
@@ -118,6 +139,22 @@ async function batalkan() {
         <div class="flex justify-end gap-2">
           <button class="btn-outline" type="button" @click="cancelOpen = false">Kembali</button>
           <button class="btn bg-bad-fg text-white" type="submit" :disabled="busy">Batalkan pesanan</button>
+        </div>
+      </form>
+    </ModalDialog>
+
+    <ModalDialog :open="paymentConfirmOpen" title="Verifikasi pembayaran" @close="paymentConfirmOpen = false">
+      <form class="flex flex-col gap-3" @submit.prevent="konfirmasiPembayaran">
+        <p class="text-sm leading-6 text-muted">
+          Pastikan dana transfer sudah benar-benar masuk sebelum mengonfirmasi. Setelah diverifikasi, pesanan dapat diproses penjual.
+        </p>
+        <div>
+          <label for="payment-reference" class="mb-1.5 block text-sm font-medium">Referensi transfer <span class="font-normal text-muted">(opsional)</span></label>
+          <input id="payment-reference" v-model="paymentReference" class="input" maxlength="200" />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button class="btn-outline" type="button" :disabled="busy" @click="paymentConfirmOpen = false">Kembali</button>
+          <button class="btn-primary" type="submit" :disabled="busy">{{ busy ? 'Memverifikasi…' : 'Konfirmasi dana diterima' }}</button>
         </div>
       </form>
     </ModalDialog>

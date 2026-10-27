@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { getOrder, simulatePaymentConfirmation } from '@/services/orderService'
+import { getOrder } from '@/services/orderService'
 import { useAuthStore } from '@/stores/auth'
 import { formatRupiah, formatTanggalJam } from '@/lib/format'
 
@@ -17,6 +17,7 @@ let countdownTimer
 
 const paymentMethod = computed(() => order.value?.payment_methods)
 const isCod = computed(() => order.value?.payment_method === 'cod' || paymentMethod.value?.category === 'cod')
+const isWaitingForCod = computed(() => isCod.value && !isPaid.value && order.value?.status !== 'dibatalkan')
 const isPaid = computed(() => order.value?.payment_status === 'dibayar')
 const expiryTime = computed(() => order.value?.payment_expires_at ? new Date(order.value.payment_expires_at).getTime() : null)
 const remainingSeconds = computed(() => expiryTime.value ? Math.max(0, Math.floor((expiryTime.value - now.value) / 1000)) : 0)
@@ -41,20 +42,18 @@ async function load() {
   }
 }
 
-async function cekStatusPembayaran() {
+async function perbaruiStatusPembayaran() {
   confirming.value = true
   error.value = ''
   try {
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-    await simulatePaymentConfirmation(order.value.id)
-    await router.replace({ name: 'pesanan-detail', params: { id: order.value.id } })
+    const latestOrder = await getOrder(route.params.orderId, auth.user.id)
+    if (!latestOrder) throw new Error('Pesanan tidak ditemukan atau tidak dapat diakses.')
+    order.value = latestOrder
+    if (latestOrder.payment_status === 'dibayar') {
+      await router.replace({ name: 'pesanan-detail', params: { id: latestOrder.id } })
+    }
   } catch (e) {
     error.value = e.message
-    try {
-      order.value = await getOrder(route.params.orderId, auth.user.id)
-    } catch (refreshError) {
-      error.value = `${e.message} Status terbaru gagal dimuat: ${refreshError.message}`
-    }
   } finally {
     confirming.value = false
   }
@@ -183,25 +182,28 @@ onBeforeUnmount(() => window.clearInterval(countdownTimer))
             <RouterLink v-if="isPaid || isExpired" :to="{ name: 'pesanan-detail', params: { id: order.id } }" class="btn-primary w-full">
               Lihat detail pesanan
             </RouterLink>
+            <RouterLink
+              v-else-if="isWaitingForCod"
+              :to="{ name: 'pesanan-detail', params: { id: order.id } }"
+              class="btn-primary w-full"
+            >Lihat pesanan COD</RouterLink>
             <button
-              v-else
+              v-else-if="order.status === 'menunggu_pembayaran'"
               class="btn-primary w-full"
               type="button"
               :disabled="confirming || isExpired"
-              @click="cekStatusPembayaran"
+              @click="perbaruiStatusPembayaran"
             >
               <svg v-if="confirming" class="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
               </svg>
-              {{ confirming ? 'Memeriksa pembayaran…' : isCod ? 'Konfirmasi pembayaran COD' : 'Cek Status Pembayaran' }}
+              {{ confirming ? 'Memeriksa status…' : 'Perbarui status pembayaran' }}
             </button>
             <p class="mt-3 text-center text-xs leading-5 text-slate-500">
-              {{ isCod ? 'Pesanan akan diteruskan setelah pembayaran COD dikonfirmasi.' : 'Status pembayaran akan diperiksa dan pesanan diperbarui secara otomatis.' }}
+              {{ isCod ? 'Pembayaran COD dilakukan kepada kurir saat pesanan diterima.' : 'Setelah transfer, pembayaran akan diteruskan ke admin untuk verifikasi. Gunakan tombol di atas untuk memuat status terbaru.' }}
             </p>
-            <p class="mt-2 text-center text-[11px] leading-5 text-slate-400">
-              Simulasi demo: konfirmasi ini memperbarui status pesanan dan tidak memproses transaksi bank sungguhan.
-            </p>
+            <p v-if="!isCod" class="mt-2 text-center text-[11px] leading-5 text-slate-400">Jangan anggap pembayaran berhasil sebelum status terkonfirmasi.</p>
           </div>
         </section>
 

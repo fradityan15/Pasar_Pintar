@@ -35,6 +35,18 @@ const blank = () => ({
 })
 const form = reactive(blank())
 
+function sanitizeNumeric(field, event) {
+  const value = event.target.value.replace(/\D/g, '')
+  event.target.value = value
+  form[field] = value
+}
+
+function sanitizeText(field, event) {
+  const value = event.target.value.replace(/[^a-zA-Z\s]/g, '')
+  event.target.value = value
+  form[field] = value
+}
+
 const selectedProductIds = computed(() => {
   const raw = route.query.produk
   if (raw === undefined) return cart.items.map((item) => item.product_id)
@@ -166,9 +178,9 @@ async function buatPesanan() {
             <p v-if="error" class="rounded-lg bg-bad-bg p-3 text-sm text-bad-fg sm:col-span-2" role="alert">{{ error }}</p>
             <div><label for="a-label" class="mb-1 block text-sm font-medium text-slate-700">Label</label><input id="a-label" v-model="form.label" class="input" required /></div>
             <div><label for="a-nama" class="mb-1 block text-sm font-medium text-slate-700">Nama penerima</label><input id="a-nama" v-model="form.recipient_name" class="input" autocomplete="name" required /></div>
-            <div><label for="a-hp" class="mb-1 block text-sm font-medium text-slate-700">Nomor telepon</label><input id="a-hp" v-model="form.phone" class="input" type="tel" autocomplete="tel" required /></div>
-            <div><label for="a-prov" class="mb-1 block text-sm font-medium text-slate-700">Provinsi</label><input id="a-prov" v-model="form.province" class="input" required /></div>
-            <div><label for="a-kota" class="mb-1 block text-sm font-medium text-slate-700">Kota/Kabupaten</label><input id="a-kota" v-model="form.city" class="input" required /></div>
+            <div><label for="a-hp" class="mb-1 block text-sm font-medium text-slate-700">Nomor telepon</label><input id="a-hp" :value="form.phone" class="input" type="tel" autocomplete="tel" required @input="sanitizeNumeric('phone', $event)" /></div>
+            <div><label for="a-prov" class="mb-1 block text-sm font-medium text-slate-700">Provinsi</label><input id="a-prov" :value="form.province" class="input" required @input="sanitizeText('province', $event)" /></div>
+            <div><label for="a-kota" class="mb-1 block text-sm font-medium text-slate-700">Kota/Kabupaten</label><input id="a-kota" :value="form.city" class="input" required @input="sanitizeText('city', $event)" /></div>
             <div><label for="a-pos" class="mb-1 block text-sm font-medium text-slate-700">Kode pos</label><input id="a-pos" v-model="form.postal_code" class="input" inputmode="numeric" /></div>
             <div class="sm:col-span-2"><label for="a-jalan" class="mb-1 block text-sm font-medium text-slate-700">Alamat lengkap</label><input id="a-jalan" v-model="form.street" class="input" autocomplete="street-address" required /></div>
             <div class="flex gap-2 sm:col-span-2">
@@ -336,9 +348,9 @@ async function buatPesanan() {
           <p v-if="error" class="rounded-lg bg-bad-bg p-3 text-sm text-bad-fg sm:col-span-2" role="alert">{{ error }}</p>
           <div><label for="modal-a-label" class="mb-1 block text-sm font-medium text-slate-700">Label</label><input id="modal-a-label" v-model="form.label" class="input" required /></div>
           <div><label for="modal-a-nama" class="mb-1 block text-sm font-medium text-slate-700">Nama penerima</label><input id="modal-a-nama" v-model="form.recipient_name" class="input" autocomplete="name" required /></div>
-          <div><label for="modal-a-hp" class="mb-1 block text-sm font-medium text-slate-700">Nomor telepon</label><input id="modal-a-hp" v-model="form.phone" class="input" type="tel" autocomplete="tel" required /></div>
-          <div><label for="modal-a-prov" class="mb-1 block text-sm font-medium text-slate-700">Provinsi</label><input id="modal-a-prov" v-model="form.province" class="input" required /></div>
-          <div><label for="modal-a-kota" class="mb-1 block text-sm font-medium text-slate-700">Kota/Kabupaten</label><input id="modal-a-kota" v-model="form.city" class="input" required /></div>
+          <div><label for="modal-a-hp" class="mb-1 block text-sm font-medium text-slate-700">Nomor telepon</label><input id="modal-a-hp" :value="form.phone" class="input" type="tel" autocomplete="tel" required @input="sanitizeNumeric('phone', $event)" /></div>
+          <div><label for="modal-a-prov" class="mb-1 block text-sm font-medium text-slate-700">Provinsi</label><input id="modal-a-prov" :value="form.province" class="input" required @input="sanitizeText('province', $event)" /></div>
+          <div><label for="modal-a-kota" class="mb-1 block text-sm font-medium text-slate-700">Kota/Kabupaten</label><input id="modal-a-kota" :value="form.city" class="input" required @input="sanitizeText('city', $event)" /></div>
           <div><label for="modal-a-pos" class="mb-1 block text-sm font-medium text-slate-700">Kode pos</label><input id="modal-a-pos" v-model="form.postal_code" class="input" inputmode="numeric" /></div>
           <div class="sm:col-span-2"><label for="modal-a-jalan" class="mb-1 block text-sm font-medium text-slate-700">Alamat lengkap</label><input id="modal-a-jalan" v-model="form.street" class="input" autocomplete="street-address" required /></div>
           <div class="flex gap-2 sm:col-span-2">

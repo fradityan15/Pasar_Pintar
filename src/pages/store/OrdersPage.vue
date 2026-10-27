@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import ModalDialog from '@/components/ModalDialog.vue'
 import { useAuthStore } from '@/stores/auth'
-import { listMyOrders } from '@/services/orderService'
+import { cancelOrder, listMyOrders } from '@/services/orderService'
 import { createProductReview, listMyReviewedProductIds } from '@/services/productReviewService'
 import { formatRupiah, formatTanggal } from '@/lib/format'
 import { ORDER_STATUS } from '@/lib/status'
@@ -20,6 +20,9 @@ const reviewRating = ref(0)
 const reviewComment = ref('')
 const reviewError = ref('')
 const reviewSaving = ref(false)
+const cancelTarget = ref(null)
+const cancelError = ref('')
+const cancelSaving = ref(false)
 
 async function load() {
   loading.value = true
@@ -41,6 +44,29 @@ const ringkas = (o) => o.order_items.map((i) => `${i.product_name} × ${i.quanti
 
 function sudahDiulas(productId) {
   return reviewedProductIds.value.includes(productId)
+}
+
+function bisaDibatalkan(order) {
+  return order.status === 'menunggu_pembayaran'
+    || (order.status === 'diproses'
+      && order.order_items.length > 0
+      && order.order_items.every((item) => item.seller_shipping_status === 'menunggu_diproses'))
+}
+
+async function batalkanPesanan() {
+  if (!cancelTarget.value || !bisaDibatalkan(cancelTarget.value)) return
+  cancelSaving.value = true
+  cancelError.value = ''
+  try {
+    await cancelOrder(cancelTarget.value.id)
+    notice.value = 'Pesanan dibatalkan.'
+    cancelTarget.value = null
+    await load()
+  } catch (e) {
+    cancelError.value = e.message
+  } finally {
+    cancelSaving.value = false
+  }
 }
 
 function mulaiUlasan(item) {
@@ -104,6 +130,13 @@ async function kirimUlasan() {
               <span class="font-semibold">{{ formatRupiah(o.total) }}</span>
             </div>
           </RouterLink>
+          <div v-if="bisaDibatalkan(o)" class="mt-3 flex justify-end border-t border-line pt-3">
+            <button
+              class="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+              type="button"
+              @click="cancelTarget = o; cancelError = ''"
+            >Batalkan Pesanan</button>
+          </div>
           <div v-if="o.status === 'selesai' && o.order_items.some((item) => item.product_id)" class="mt-3 border-t border-line pt-3">
             <p class="mb-2 text-xs font-medium text-muted">Ulasan produk pesanan ini</p>
             <ul class="space-y-2">
@@ -148,6 +181,22 @@ async function kirimUlasan() {
           <button class="btn-primary" type="submit" :disabled="reviewSaving">{{ reviewSaving ? 'Mengirim…' : 'Kirim ulasan' }}</button>
         </div>
       </form>
+    </ModalDialog>
+
+    <ModalDialog :open="!!cancelTarget" title="Batalkan pesanan?" @close="cancelTarget = null">
+      <div class="space-y-4">
+        <p class="text-sm leading-6 text-muted">
+          Apakah Anda yakin ingin membatalkan pesanan <strong class="text-ink">{{ cancelTarget?.order_no }}</strong>?
+          Tindakan ini tidak dapat dibatalkan.
+        </p>
+        <p v-if="cancelError" class="rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ cancelError }}</p>
+        <div class="flex justify-end gap-2">
+          <button class="btn-outline" type="button" :disabled="cancelSaving" @click="cancelTarget = null">Kembali</button>
+          <button class="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-50" type="button" :disabled="cancelSaving" @click="batalkanPesanan">
+            {{ cancelSaving ? 'Membatalkan…' : 'Ya, batalkan' }}
+          </button>
+        </div>
+      </div>
     </ModalDialog>
   </div>
 </template>

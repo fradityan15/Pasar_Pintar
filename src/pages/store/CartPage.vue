@@ -86,7 +86,7 @@ function checkout() {
       </div>
       <p v-if="cart.items.length" class="text-sm text-slate-500">{{ cart.items.length }} produk · {{ cart.count }} barang</p>
     </div>
-    <p v-if="error" class="mt-4 rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ error }}</p>
+    <p v-if="error || cart.error" class="mt-4 rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ error || cart.error }}</p>
 
     <div v-if="cart.loading && !cart.items.length" class="mt-6 h-40 animate-pulse rounded-2xl bg-surface"></div>
 

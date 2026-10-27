@@ -10,12 +10,12 @@ const routes = [
     path: '/',
     component: StoreLayout,
     children: [
-      { path: '', name: 'home', component: () => import('@/pages/store/HomePage.vue'), meta: { title: 'Beranda' } },
-      { path: 'katalog', name: 'katalog', component: () => import('@/pages/store/CatalogPage.vue'), meta: { title: 'Katalog' } },
+      { path: '', name: 'home', component: () => import('@/pages/store/HomePage.vue'), meta: { title: 'Beranda', public: true } },
+      { path: 'katalog', name: 'katalog', component: () => import('@/pages/store/CatalogPage.vue'), meta: { title: 'Katalog', public: true } },
       { path: 'akun', name: 'akun', component: () => import('@/pages/store/AccountPage.vue'), meta: { title: 'Akun saya', requiresAuth: true } },
       { path: 'umkm', name: 'umkm', component: () => import('@/pages/store/UmkmListPage.vue'), meta: { title: 'UMKM mitra' } },
       { path: 'umkm/:slug', name: 'umkm-detail', component: () => import('@/pages/store/UmkmDetailPage.vue'), meta: { title: 'Profil UMKM' } },
-      { path: 'mitra', name: 'umkm-dashboard', component: () => import('@/pages/store/UmkmProductsPage.vue'), meta: { title: 'Ringkasan Toko', requiresAuth: true } },
+      { path: 'mitra', name: 'umkm-dashboard', component: () => import('@/pages/store/UmkmDashboardPage.vue'), meta: { title: 'Ringkasan Toko', requiresAuth: true } },
       { path: 'mitra/produk', name: 'umkm-products', component: () => import('@/pages/store/UmkmProductsPage.vue'), meta: { title: 'Dasbor UMKM', requiresAuth: true } },
       { path: 'mitra/pesanan', name: 'umkm-orders', component: () => import('@/pages/store/UmkmOrdersPage.vue'), meta: { title: 'Pesanan masuk', requiresAuth: true } },
       { path: 'mitra/pengaturan', name: 'umkm-settings', component: () => import('@/pages/store/UmkmSettingsPage.vue'), meta: { title: 'Pengaturan Toko', requiresAuth: true } },
@@ -83,6 +83,7 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   await auth.init()
 
+  if (to.meta.public) return
   if (to.meta.requiresAuth && !auth.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }

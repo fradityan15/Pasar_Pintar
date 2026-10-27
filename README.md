@@ -5,7 +5,13 @@ Platform e-commerce UMKM. Vue 3 + Vite + Tailwind CSS + Pinia + Vue Router + Sup
 ## Menjalankan di komputer
 
 1. Pastikan Node.js 18+ terpasang (`node -v`).
-2. Siapkan database: jalankan migrasi secara berurutan `001..003`, `005_umkm_ownership.sql`, `006_umkm_product_images.sql`, `007_seller_orders.sql`, `008_seller_store_settings.sql`, `009_seller_order_tracking.sql`, `010_buyer_order_completion.sql`, `011_order_shipment_completion.sql`, `012_selected_cart_checkout.sql`, `013_checkout_shipping_options.sql`, dan `014_live_dashboard_data.sql`, lalu jalankan `01_setup_payments.sql` dan `seed.sql` di Supabase SQL Editor. `seed.sql` hanya mengisi data referensi kategori/daerah dan membersihkan data demo lama dengan slug yang sudah ditentukan; produk dan UMKM dibuat lewat aplikasi. `004_cron.sql` bersifat opsional dan memerlukan ekstensi pg_cron.
+2. Siapkan database di Supabase SQL Editor dengan urutan:
+   - Migrasi `001_schema.sql` sampai `003_functions.sql`.
+   - Migrasi `005_umkm_ownership.sql` sampai `014_live_dashboard_data.sql` secara berurutan. `004_cron.sql` opsional dan memerlukan ekstensi pg_cron.
+   - Jalankan `01_setup_payments.sql`, lalu migrasi `015_checkout_payment_options.sql` sampai `023_order_payment_and_reporting_fixes.sql` secara berurutan.
+   - Jalankan `02_seed_payment_methods.sql` dan `supabase/seed.sql`.
+
+   `seed.sql` hanya mengisi data referensi kategori/daerah dan membersihkan data demo lama dengan slug yang sudah ditentukan; produk dan UMKM dibuat lewat aplikasi. Database yang sudah memakai migrasi lama cukup menjalankan migrasi yang belum diterapkan sesuai nomor urutnya.
 3. Salin `.env.example` menjadi `.env`, isi `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY`.
 4. Pasang dan jalankan:
    ```
@@ -48,7 +54,7 @@ Isi dua environment variable di atas di dashboard Vercel/Netlify.
 Detail produk `/produk/:slug` → keranjang `/keranjang` → checkout `/checkout` → pesanan `/pesanan/:id`.
 Checkout memanggil fungsi database `create_order` (stok dikunci dan dikurangi dalam satu transaksi). Setelah migrasi `012_selected_cart_checkout.sql`, pembeli dapat memilih item keranjang; hanya item terpilih yang menjadi pesanan, sementara item lain tetap di keranjang. Migrasi `013_checkout_shipping_options.sql` menyimpan metode dan ongkir pada pesanan. Tarif pengiriman standar platform saat ini Rp 15.000; samakan nilai `FLAT_SHIPPING` di `src/lib/status.js` dengan tarif dalam fungsi database.
 Jalankan `02_seed_payment_methods.sql` di Supabase SQL Editor untuk menambahkan COD dan rekening transfer awal (skrip aman dijalankan ulang). Tambahkan QRIS hanya setelah URL gambar QR merchant resmi tersedia. Baris nonaktif tidak dibaca publik dan metode yang sudah dipakai pesanan tidak dapat dihapus.
-Pesanan baru dicatat dengan status menunggu pembayaran. Konfirmasi pembayaran tidak disimulasikan; integrasikan payment gateway dan webhook untuk mengubah status setelah pembayaran benar-benar terverifikasi. Migrasi `014_live_dashboard_data.sql` menghapus RPC uji bayar dan menyediakan agregasi dashboard berdasarkan transaksi nyata.
+Pembayaran transfer diverifikasi secara manual oleh admin setelah dana benar-benar terlihat di rekening; aplikasi ini belum terhubung ke payment gateway/webhook. Tombol pembeli hanya memuat status terbaru dan tidak dapat mengubah pesanan menjadi dibayar. Admin mengonfirmasi transfer dari halaman detail pesanan setelah memeriksa mutasi bank; referensi transaksi dicatat di log status. Data rekening yang dimasukkan oleh `02_seed_payment_methods.sql` adalah data awal/demo dan wajib diganti dengan rekening merchant resmi sebelum digunakan. COD diproses penjual sebagai COD dan dicatat dibayar setelah pembeli mengonfirmasi penerimaan.
 
 ## Pendaftaran mitra UMKM
 

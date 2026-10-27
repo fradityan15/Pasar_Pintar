@@ -29,6 +29,10 @@ export async function saveAddress(userId, a, makeDefault) {
 
 // Checkout atomik di database: cek stok, buat pesanan, kurangi stok, kosongkan keranjang.
 export async function createOrder(addressId, paymentMethodId, productIds = null, shippingMethod = 'regular') {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(paymentMethodId ?? '')) {
+    throw new Error('Pilih metode pembayaran yang valid.')
+  }
+
   return unwrap(await supabase.rpc('create_order', {
     p_address_id: addressId,
     p_payment_method_id: paymentMethodId,
@@ -45,15 +49,11 @@ export async function confirmOrderReceived(orderId) {
   unwrap(await supabase.rpc('confirm_order_received', { p_order_id: orderId }))
 }
 
-export async function simulatePaymentConfirmation(orderId) {
-  unwrap(await supabase.rpc('simulate_payment_confirmation', { p_order_id: orderId }))
-}
-
 export async function listMyOrders(userId) {
   return unwrap(
     await supabase
       .from('orders')
-      .select('id, order_no, status, total, created_at, order_items(product_id, product_name, quantity)')
+      .select('id, order_no, status, total, created_at, order_items(product_id, product_name, quantity, seller_shipping_status)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false }),
   )
@@ -63,7 +63,7 @@ export async function getOrder(id, userId) {
   return unwrap(
     await supabase
       .from('orders')
-      .select('*, payment_methods(name, category, account_number, account_name, qr_image_url), order_items(id, product_id, product_name, unit_price, quantity, products(product_images(url, sort_order)))')
+      .select('*, payment_methods(name, category, account_number, account_name, qr_image_url), order_items(id, product_id, product_name, unit_price, quantity, seller_shipping_status, products(product_images(url, sort_order)))')
       .eq('id', id)
       .eq('user_id', userId)
       .maybeSingle(),

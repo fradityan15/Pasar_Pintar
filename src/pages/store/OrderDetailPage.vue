@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import ModalDialog from '@/components/ModalDialog.vue'
 import OrderTracking from '@/components/OrderTracking.vue'
 import { cancelOrder, confirmOrderReceived, getOrder } from '@/services/orderService'
 import { useAuthStore } from '@/stores/auth'
@@ -14,10 +15,22 @@ const loading = ref(true)
 const error = ref('')
 const busy = ref(false)
 const info = ref('')
+const cancelOpen = ref(false)
 const trackingRefresh = ref(0)
 
 const addr = computed(() => order.value?.shipping_address ?? {})
-const menunggu = computed(() => order.value?.status === 'menunggu_pembayaran')
+const menunggu = computed(() =>
+  order.value?.status === 'menunggu_pembayaran'
+  || (order.value?.payment_methods?.category === 'cod'
+    && order.value.payment_status !== 'dibayar'
+    && order.value.status !== 'dibatalkan'),
+)
+const bisaDibatalkan = computed(() =>
+  order.value?.status === 'menunggu_pembayaran'
+  || (order.value?.status === 'diproses'
+    && order.value.order_items.length > 0
+    && order.value.order_items.every((item) => item.seller_shipping_status === 'menunggu_diproses')),
+)
 const progressSteps = ['Menunggu Pembayaran', 'Diproses / Dikemas', 'Dikirim', 'Selesai']
 const progressIndex = computed(() => ({
   menunggu_pembayaran: 0,
@@ -61,8 +74,23 @@ const konfirmasiDiterima = () => {
     aksi(() => confirmOrderReceived(order.value.id), 'Penerimaan barang dikonfirmasi. Terima kasih sudah berbelanja!')
   }
 }
-const batal = () => {
-  if (confirm('Batalkan pesanan ini? Stok akan dikembalikan.')) aksi(() => cancelOrder(order.value.id, 'Dibatalkan pelanggan'), 'Pesanan dibatalkan.')
+
+async function batalkan() {
+  if (!bisaDibatalkan.value) return
+  busy.value = true
+  error.value = ''
+  info.value = ''
+  try {
+    await cancelOrder(order.value.id)
+    info.value = 'Pesanan dibatalkan.'
+    cancelOpen.value = false
+    order.value = await getOrder(route.params.id, auth.user.id)
+    trackingRefresh.value++
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    busy.value = false
+  }
 }
 </script>
 
@@ -110,12 +138,15 @@ const batal = () => {
         <p v-if="info" class="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{{ info }}</p>
         <p v-if="error" class="mt-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700" role="alert">{{ error }}</p>
 
-        <section v-if="menunggu" class="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-100 bg-amber-50 p-5">
+        <section v-if="menunggu" class="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-5">
           <div>
-            <p class="font-semibold text-amber-950">{{ order.payment_method === 'cod' ? 'Pesanan COD' : 'Pesanan menunggu pembayaran' }} · {{ formatRupiah(order.total) }}</p>
+            <p class="font-semibold text-amber-950">{{ order.payment_methods?.category === 'cod' || order.payment_method === 'cod' ? 'Pesanan COD' : 'Pesanan menunggu pembayaran' }} · {{ formatRupiah(order.total) }}</p>
             <p class="mt-1 text-sm text-amber-800">Metode yang dipilih: {{ order.payment_methods?.name || PAYMENT_METHOD[order.payment_method] || order.payment_method }}. {{ order.payment_methods?.category === 'cod' || order.payment_method === 'cod' ? 'Siapkan pembayaran tunai saat pesanan diterima.' : 'Pesanan akan diproses setelah pembayaran terkonfirmasi.' }}</p>
           </div>
-          <button class="rounded-lg border border-amber-200 bg-white px-4 py-2.5 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 disabled:opacity-50" type="button" :disabled="busy" @click="batal">Batalkan pesanan</button>
+        </section>
+        <section v-if="bisaDibatalkan" class="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-red-100 bg-red-50 p-5">
+          <p class="text-sm text-red-800">Pesanan masih menunggu pembayaran atau belum mulai diproses oleh toko.</p>
+          <button class="rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-800 transition hover:bg-red-100 disabled:opacity-50" type="button" :disabled="busy" @click="cancelOpen = true">Batalkan pesanan</button>
         </section>
 
         <div class="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -183,5 +214,20 @@ const batal = () => {
         </div>
       </template>
     </div>
+
+    <ModalDialog :open="cancelOpen" title="Batalkan pesanan?" @close="cancelOpen = false">
+      <div class="space-y-4">
+        <p class="text-sm leading-6 text-slate-600">
+          Apakah Anda yakin ingin membatalkan pesanan <strong class="text-slate-900">{{ order?.order_no }}</strong>?
+          Tindakan ini tidak dapat dibatalkan.
+        </p>
+        <div class="flex justify-end gap-2">
+          <button class="btn-outline" type="button" :disabled="busy" @click="cancelOpen = false">Kembali</button>
+          <button class="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-50" type="button" :disabled="busy" @click="batalkan">
+            {{ busy ? 'Membatalkan…' : 'Ya, batalkan' }}
+          </button>
+        </div>
+      </div>
+    </ModalDialog>
   </div>
 </template>

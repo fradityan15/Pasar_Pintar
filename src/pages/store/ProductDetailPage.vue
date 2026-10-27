@@ -83,7 +83,6 @@ function ubahQty(delta) {
 }
 
 async function tambah() {
-  if (!auth.isLoggedIn) return router.push({ name: 'login', query: { redirect: route.fullPath } })
   adding.value = true
   addError.value = ''
   added.value = false

@@ -12,7 +12,7 @@ const activeItem = computed(() => {
   if (route.name === 'umkm-orders') return 'orders'
   if (route.name === 'umkm-settings') return 'settings'
   if (route.name === 'umkm-dashboard') return 'overview'
-  if (route.name === 'umkm-products') return route.hash === '#produk-saya' ? 'products' : 'overview'
+  if (route.name === 'umkm-products') return 'products'
   return ''
 })
 
