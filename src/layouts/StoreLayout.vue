@@ -1,18 +1,65 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { getMyUmkm } from '@/services/umkmPartnerService'
 
 const auth = useAuthStore()
 const cart = useCartStore()
+const route = useRoute()
 const router = useRouter()
 const search = ref('')
 const mobileMenuOpen = ref(false)
+const activeUtilityPanel = ref('')
+const storageNotice = ref('')
 const myUmkm = ref(null)
 const umkmCheckError = ref('')
 let umkmCheckRequest = 0
+const utilityStorageKeys = {
+  messages: 'pasarpintar.messages.read.v1',
+  notifications: 'pasarpintar.notifications.read.v1',
+}
+const messages = ref([
+  { id: 1, sender: 'Batik Sekar Arum', text: 'Pesanan Anda sedang disiapkan. Terima kasih sudah berbelanja!', time: '10 menit lalu', read: false },
+  { id: 2, sender: 'Kerajinan Bambu Lestari', text: 'Kami sudah mengonfirmasi ketersediaan produk pilihan Anda.', time: '1 jam lalu', read: false },
+  { id: 3, sender: 'PasarPintar', text: 'Selamat datang! Jelajahi produk unggulan UMKM lokal.', time: 'Kemarin', read: true },
+])
+const notifications = ref([
+  { id: 1, title: 'Pesanan sedang dikemas', text: 'Pesanan PP-20261028-0142 sedang disiapkan oleh penjual.', time: '12 menit lalu', read: false },
+  { id: 2, title: 'Pembayaran berhasil', text: 'Pembayaran untuk pesanan PP-20261027-0098 telah diterima.', time: 'Kemarin', read: false },
+  { id: 3, title: 'Promo produk lokal', text: 'Ada pilihan baru dari UMKM favorit Anda.', time: '2 hari lalu', read: true },
+])
+const unreadMessages = computed(() => messages.value.filter((message) => !message.read).length)
+const unreadNotifications = computed(() => notifications.value.filter((notification) => !notification.read).length)
+const currentUtilityItems = computed(() =>
+  activeUtilityPanel.value === 'messages' ? messages.value : notifications.value,
+)
+const utilityPanelTitle = computed(() =>
+  activeUtilityPanel.value === 'messages' ? 'Pesan' : 'Notifikasi',
+)
+
+function restoreReadItems(items, storageKey) {
+  if (typeof window === 'undefined') return
+  try {
+    const stored = window.localStorage.getItem(storageKey)
+    if (!stored) return
+    const readIds = JSON.parse(stored)
+    if (!Array.isArray(readIds) || !readIds.every(Number.isInteger)) {
+      throw new Error('Format status baca tidak valid.')
+    }
+    const readIdSet = new Set(readIds)
+    for (const item of items) {
+      if (readIdSet.has(item.id)) item.read = true
+    }
+  } catch (error) {
+    storageNotice.value = `Status baca tidak dapat dimuat: ${error.message}`
+  }
+}
+
+restoreReadItems(messages.value, utilityStorageKeys.messages)
+restoreReadItems(notifications.value, utilityStorageKeys.notifications)
+
 const firstName = computed(() => auth.profile?.full_name?.trim().split(/\s+/)[0] || 'Pengguna')
 const initials = computed(() =>
   (auth.profile?.full_name || auth.user?.email || 'P')
@@ -23,6 +70,9 @@ const initials = computed(() =>
     .join(''),
 )
 const avatarUrl = computed(() => auth.user?.user_metadata?.avatar_url || auth.user?.user_metadata?.picture || '')
+const isSellerDashboard = computed(() =>
+  ['umkm-dashboard', 'umkm-products', 'umkm-orders', 'umkm-settings'].includes(String(route.name ?? '')),
+)
 
 watch(
   () => auth.user?.id,
@@ -56,10 +106,38 @@ function cari() {
   const q = search.value.trim()
   router.push({ name: 'katalog', query: q ? { q } : {} })
 }
+
+function toggleUtilityPanel(panel) {
+  activeUtilityPanel.value = activeUtilityPanel.value === panel ? '' : panel
+}
+
+function markUtilityItemRead(item) {
+  item.read = true
+  persistReadItems(
+    activeUtilityPanel.value === 'messages' ? messages.value : notifications.value,
+    utilityStorageKeys[activeUtilityPanel.value],
+  )
+}
+
+function markAllUtilityItemsRead() {
+  for (const item of currentUtilityItems.value) item.read = true
+  persistReadItems(currentUtilityItems.value, utilityStorageKeys[activeUtilityPanel.value])
+}
+
+function persistReadItems(items, storageKey) {
+  if (typeof window === 'undefined' || !storageKey) return
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(items.filter((item) => item.read).map((item) => item.id)))
+    storageNotice.value = ''
+  } catch (error) {
+    storageNotice.value = `Status baca tidak dapat disimpan: ${error.message}`
+  }
+}
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col">
+  <div class="flex min-h-screen flex-col" :class="isSellerDashboard ? 'bg-white' : 'bg-slate-50'">
+    <div :class="isSellerDashboard ? '' : 'sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm'">
     <div class="bg-ink px-4 text-white">
       <div class="relative mx-auto flex min-h-9 max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 py-1 text-xs sm:px-10">
         <p class="hidden text-white/80 sm:block">Produk khas daerah, langsung dari UMKM Indonesia</p>
@@ -97,15 +175,15 @@ function cari() {
                 <path fill-rule="evenodd" d="M5.22 7.47a.75.75 0 0 1 1.06 0L10 11.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
               </svg>
             </RouterLink>
-            <div class="invisible absolute right-0 top-full z-50 w-52 translate-y-1 rounded-xl border border-line bg-white p-1.5 text-sm text-ink opacity-0 shadow-lg transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-              <RouterLink :to="{ name: 'akun' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-surface focus-visible:bg-surface">
+            <div class="invisible absolute right-0 top-full z-50 w-52 translate-y-1 rounded-xl border border-line bg-white p-1.5 text-sm text-gray-900 opacity-0 shadow-lg transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+              <RouterLink :to="{ name: 'akun' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50">
                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                   <circle cx="12" cy="8" r="3.5" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 20a7 7 0 0 1 14 0" />
                 </svg>
                 Akun Saya
               </RouterLink>
-              <RouterLink :to="{ name: 'pesanan' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-surface focus-visible:bg-surface">
+              <RouterLink :to="{ name: 'pesanan' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50">
                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8ZM9 8a3 3 0 0 1 6 0M8 12h.01M16 12h.01" />
                 </svg>
@@ -114,7 +192,7 @@ function cari() {
               <RouterLink
                 v-if="myUmkm?.status === 'active' && myUmkm.is_active"
                 :to="{ name: 'umkm-products' }"
-                class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-surface focus-visible:bg-surface"
+                class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50"
               >
                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18l-2 10H5L3 10ZM5 10l2-6h10l2 6M9 20v-5h6v5" />
@@ -124,14 +202,14 @@ function cari() {
               <p v-if="umkmCheckError" class="px-3 py-2 text-xs text-bad-fg" role="status">
                 Status toko belum dapat diperiksa.
               </p>
-              <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin-dashboard' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-surface focus-visible:bg-surface">
+              <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin-dashboard' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50">
                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 13h6V4H4v9ZM14 20h6V11h-6v9ZM14 8h6V4h-6v4ZM4 20h6v-3H4v3Z" />
                 </svg>
                 Panel Admin
               </RouterLink>
               <div class="my-1 border-t border-line"></div>
-              <button type="button" class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-bad-fg hover:bg-bad-bg focus-visible:bg-bad-bg" @click="keluar">
+              <button type="button" class="flex w-full items-center gap-2.5 rounded-lg border border-gray-900 px-3 py-2.5 text-gray-900 hover:bg-gray-50 focus-visible:bg-gray-50" @click="keluar">
                 <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M10 17l5-5-5-5M15 12H3m9-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
                 </svg>
@@ -156,38 +234,38 @@ function cari() {
         <nav
           v-if="mobileMenuOpen"
           id="mobile-navigation"
-          class="absolute inset-x-0 top-full z-50 mt-1 rounded-xl border border-line bg-white p-2 text-sm text-ink shadow-lg lg:hidden"
+          class="absolute inset-x-0 top-full z-50 mt-1 rounded-xl border border-line bg-white p-2 text-sm text-gray-900 shadow-lg lg:hidden"
           aria-label="Navigasi mobile"
         >
           <RouterLink v-for="item in [
             { label: 'Beranda', to: { name: 'home' } },
             { label: 'Katalog', to: { name: 'katalog' } },
             { label: 'UMKM', to: { name: 'umkm' } },
-          ]" :key="item.label" :to="item.to" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">
+          ]" :key="item.label" :to="item.to" class="block rounded-lg px-3 py-2.5 hover:bg-gray-50" @click="mobileMenuOpen = false">
             {{ item.label }}
           </RouterLink>
           <template v-if="auth.isLoggedIn">
             <div class="my-1 border-t border-line"></div>
-            <RouterLink :to="{ name: 'akun' }" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">Akun Saya</RouterLink>
-            <RouterLink :to="{ name: 'pesanan' }" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">Pesanan</RouterLink>
+            <RouterLink :to="{ name: 'akun' }" class="block rounded-lg px-3 py-2.5 hover:bg-gray-50" @click="mobileMenuOpen = false">Akun Saya</RouterLink>
+            <RouterLink :to="{ name: 'pesanan' }" class="block rounded-lg px-3 py-2.5 hover:bg-gray-50" @click="mobileMenuOpen = false">Pesanan</RouterLink>
             <RouterLink
               v-if="myUmkm?.status === 'active' && myUmkm.is_active"
               :to="{ name: 'umkm-products' }"
-              class="block rounded-lg px-3 py-2.5 hover:bg-surface"
+              class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
               @click="mobileMenuOpen = false"
             >Dasbor Penjual</RouterLink>
             <RouterLink
               v-if="auth.isAdmin"
               :to="{ name: 'admin-dashboard' }"
-              class="block rounded-lg px-3 py-2.5 hover:bg-surface"
+              class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
               @click="mobileMenuOpen = false"
             >Panel Admin</RouterLink>
-            <button type="button" class="block w-full rounded-lg px-3 py-2.5 text-left text-bad-fg hover:bg-bad-bg" @click="mobileMenuOpen = false; keluar()">Keluar</button>
+            <button type="button" class="block w-full rounded-lg border border-gray-900 px-3 py-2.5 text-left text-gray-900 hover:bg-gray-50" @click="mobileMenuOpen = false; keluar()">Keluar</button>
           </template>
           <template v-else>
             <div class="my-1 border-t border-line"></div>
-            <RouterLink :to="{ name: 'login' }" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">Masuk</RouterLink>
-            <RouterLink :to="{ name: 'register' }" class="block rounded-lg px-3 py-2.5 hover:bg-surface" @click="mobileMenuOpen = false">Daftar</RouterLink>
+            <RouterLink :to="{ name: 'login' }" class="block rounded-lg px-3 py-2.5 transition-colors hover:bg-gray-50 hover:text-gray-900" @click="mobileMenuOpen = false">Masuk</RouterLink>
+            <RouterLink :to="{ name: 'register' }" class="block rounded-lg px-3 py-2.5 transition-colors hover:bg-gray-50 hover:text-gray-900" @click="mobileMenuOpen = false">Daftar</RouterLink>
           </template>
         </nav>
       </div>
@@ -201,7 +279,7 @@ function cari() {
         </RouterLink>
 
         <form
-          class="order-3 flex min-w-0 w-full flex-1 rounded-lg border border-line bg-white p-1 focus-within:border-ink focus-within:ring-2 focus-within:ring-ink/10 lg:order-none lg:mx-6 lg:max-w-3xl"
+          class="order-3 flex min-w-0 w-full flex-1 rounded-lg border border-line bg-white p-1 focus-within:border-gray-900 focus-within:ring-2 focus-within:ring-gray-900/10 lg:order-none lg:mx-6 lg:max-w-3xl"
           role="search"
           @submit.prevent="cari"
         >
@@ -211,11 +289,14 @@ function cari() {
             v-model="search"
             type="search"
             placeholder="Cari produk"
-            class="min-w-0 flex-1 rounded-l-md bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder:text-muted/70"
+            class="min-w-0 flex-1 rounded-l-md bg-transparent px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-muted/70"
           />
           <button
             type="submit"
-            class="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-4 text-sm font-semibold text-white transition-colors hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+            class="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 px-4 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            :class="isSellerDashboard
+              ? 'rounded-md bg-gray-900 hover:bg-black focus-visible:ring-gray-900'
+              : 'rounded-xl bg-gray-900 hover:bg-black hover:shadow-md focus-visible:ring-gray-900'"
             aria-label="Cari produk"
           >
             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -226,31 +307,42 @@ function cari() {
           </button>
         </form>
 
-        <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-6">
-          <span
-            role="img"
+        <div class="relative ml-auto flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-6">
+          <button
+            type="button"
+            class="relative hidden h-11 w-11 items-center justify-center rounded-lg text-gray-900 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 sm:flex"
+            :aria-expanded="activeUtilityPanel === 'messages'"
+            aria-controls="navbar-utility-panel"
             aria-label="Pesan"
             title="Pesan"
-            class="hidden h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-surface hover:text-ink/70 sm:flex"
+            @click="toggleUtilityPanel('messages')"
           >
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h16v11H9l-5 3v-14Z" />
               <path stroke-linecap="round" d="M8 10h8M8 13.5h5" />
             </svg>
-          </span>
-          <span
-            role="img"
+            <span v-if="unreadMessages" class="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold text-white">{{ unreadMessages }}</span>
+          </button>
+          <button
+            type="button"
+            class="relative hidden h-11 w-11 items-center justify-center rounded-lg text-gray-900 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 sm:flex"
+            :aria-expanded="activeUtilityPanel === 'notifications'"
+            aria-controls="navbar-utility-panel"
             aria-label="Notifikasi"
             title="Notifikasi"
-            class="hidden h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-surface hover:text-ink/70 sm:flex"
+            @click="toggleUtilityPanel('notifications')"
           >
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
             </svg>
-          </span>
+            <span v-if="unreadNotifications" class="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold text-white">{{ unreadNotifications }}</span>
+          </button>
           <RouterLink
             to="/cart"
-            class="relative flex h-11 w-11 items-center justify-center rounded-lg text-ink transition-colors hover:bg-surface hover:text-ink/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+            class="relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2"
+            :class="isSellerDashboard
+              ? 'text-gray-900 hover:bg-gray-50 hover:text-gray-700 focus-visible:ring-gray-900'
+              : 'text-gray-900 hover:bg-gray-50 focus-visible:ring-gray-900'"
             aria-label="Keranjang"
           >
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -262,12 +354,68 @@ function cari() {
             >{{ cart.count }}</span>
           </RouterLink>
           <template v-if="!auth.isLoggedIn">
-            <RouterLink :to="{ name: 'login' }" class="btn-outline hidden md:inline-flex">Masuk</RouterLink>
-            <RouterLink :to="{ name: 'register' }" class="btn-primary hidden md:inline-flex">Daftar</RouterLink>
+            <RouterLink
+              :to="{ name: 'login' }"
+              class="btn-outline hidden md:inline-flex"
+              :class="isSellerDashboard ? '' : 'border-gray-900 text-gray-900 hover:bg-gray-50'"
+            >Masuk</RouterLink>
+            <RouterLink
+              :to="{ name: 'register' }"
+              class="btn hidden md:inline-flex"
+              :class="isSellerDashboard ? 'bg-gray-900 text-white hover:bg-black' : 'bg-gray-900 text-white hover:bg-black'"
+            >Daftar</RouterLink>
           </template>
+          <section
+            v-if="activeUtilityPanel"
+            id="navbar-utility-panel"
+            class="absolute right-0 top-full z-[60] mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white text-gray-900 shadow-xl"
+            :aria-label="utilityPanelTitle"
+          >
+            <header class="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
+              <div>
+                <h2 class="text-sm font-bold">{{ utilityPanelTitle }}</h2>
+                <p class="mt-0.5 text-xs text-gray-500">{{ activeUtilityPanel === 'messages' ? 'Percakapan dengan penjual dan PasarPintar' : 'Pembaruan aktivitas akun Anda' }}</p>
+              </div>
+              <button
+                v-if="currentUtilityItems.some((item) => !item.read)"
+                type="button"
+                class="rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                @click="markAllUtilityItemsRead"
+              >Tandai dibaca</button>
+              <button
+                type="button"
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg text-gray-600 hover:bg-gray-100"
+                aria-label="Tutup panel"
+                @click="activeUtilityPanel = ''"
+              >×</button>
+            </header>
+            <p v-if="storageNotice" class="border-b border-gray-100 bg-gray-50 px-4 py-2 text-xs text-gray-700" role="status">{{ storageNotice }}</p>
+            <ul class="max-h-80 divide-y divide-gray-100 overflow-y-auto">
+              <li v-for="item in currentUtilityItems" :key="item.id">
+                <button
+                  type="button"
+                  class="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+                  :class="item.read ? 'bg-white' : 'bg-gray-50/70'"
+                  @click="markUtilityItemRead(item)"
+                >
+                  <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" :class="item.read ? 'bg-gray-300' : 'bg-gray-900'" aria-hidden="true"></span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold">{{ activeUtilityPanel === 'messages' ? item.sender : item.title }}</span>
+                    <span class="mt-0.5 block text-xs leading-5 text-gray-600">{{ item.text }}</span>
+                    <span class="mt-1 block text-[11px] text-gray-500">{{ item.time }}</span>
+                  </span>
+                </button>
+              </li>
+            </ul>
+            <p v-if="!currentUtilityItems.length" class="px-4 py-8 text-center text-sm text-gray-500">Belum ada {{ activeUtilityPanel === 'messages' ? 'pesan' : 'notifikasi' }}.</p>
+            <footer class="border-t border-gray-100 px-4 py-2.5 text-center">
+              <button type="button" class="text-xs font-semibold text-gray-700 hover:text-black" @click="activeUtilityPanel = ''">Tutup</button>
+            </footer>
+          </section>
         </div>
       </div>
     </header>
+    </div>
 
     <main class="flex-1"><RouterView /></main>
 

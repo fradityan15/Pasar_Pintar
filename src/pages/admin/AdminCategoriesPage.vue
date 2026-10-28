@@ -98,7 +98,7 @@ async function hapus(c) {
             <td class="p-3"><span class="badge" :class="c.is_active ? 'bg-ok-bg text-ok-fg' : 'bg-surface text-muted'">{{ c.is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
             <td class="whitespace-nowrap p-3 text-right">
               <button class="font-semibold underline" type="button" @click="bukaForm(c)">Ubah</button>
-              <button class="ml-3 font-semibold text-bad-fg underline" type="button" :disabled="hasChildren(c.id)" :title="hasChildren(c.id) ? 'Hapus subkategori dulu' : ''" @click="hapus(c)">Hapus</button>
+              <button class="ml-3 font-semibold text-gray-900 underline" type="button" :disabled="hasChildren(c.id)" :title="hasChildren(c.id) ? 'Hapus subkategori dulu' : ''" @click="hapus(c)">Hapus</button>
             </td>
           </tr>
         </tbody>

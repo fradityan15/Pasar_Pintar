@@ -150,7 +150,7 @@ async function hapus(a) {
         <div><label for="p-nama" class="mb-1.5 block text-sm font-medium">Nama lengkap</label><input id="p-nama" v-model="profile.full_name" class="input" autocomplete="name" required /></div>
         <div><label for="p-hp" class="mb-1.5 block text-sm font-medium">Nomor telepon</label><input id="p-hp" v-model="profile.phone" class="input" type="tel" autocomplete="tel" /></div>
         <div class="flex items-center gap-3 sm:col-span-2">
-          <button class="btn-primary" type="submit" :disabled="profBusy">{{ profBusy ? 'Menyimpan…' : 'Simpan profil' }}</button>
+          <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md" type="submit" :disabled="profBusy">{{ profBusy ? 'Menyimpan…' : 'Simpan profil' }}</button>
           <p v-if="profMsg" class="text-sm text-ok-fg" role="status">{{ profMsg }}</p>
           <p v-if="profErr" class="text-sm text-bad-fg" role="alert">{{ profErr }}</p>
         </div>
@@ -171,7 +171,7 @@ async function hapus(a) {
       <div v-else-if="myUmkm?.status === 'active' && myUmkm.is_active" class="mt-4 rounded-xl border border-ok-fg/15 bg-ok-bg p-4">
         <p class="font-semibold text-ok-fg">Selamat bergabung, {{ myUmkm.name }}!</p>
         <p class="mt-1 text-sm text-ok-fg">UMKM Anda sudah aktif. Mulai kelola produk toko Anda.</p>
-        <RouterLink :to="{ name: 'umkm-products' }" class="btn-primary mt-4">Masuk ke Dasbor UMKM</RouterLink>
+        <RouterLink :to="{ name: 'umkm-products' }" class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md mt-4">Masuk ke Dasbor UMKM</RouterLink>
       </div>
       <div v-else-if="myUmkm" class="mt-4 rounded-xl border border-line bg-surface p-4 text-sm text-muted" role="status">
         UMKM {{ myUmkm.name }} saat ini tidak aktif. Hubungi Admin PasarPintar untuk informasi lebih lanjut.
@@ -179,7 +179,7 @@ async function hapus(a) {
       <div v-else-if="!umkmFormOpen" class="mt-4 rounded-xl bg-surface p-5">
         <p class="font-semibold">Punya usaha lokal?</p>
         <p class="mt-1 text-sm text-muted">Daftarkan UMKM Anda untuk bergabung dan menjual produk di PasarPintar.</p>
-        <button class="btn-primary mt-4" type="button" @click="umkmFormOpen = true">Daftar sebagai Mitra UMKM</button>
+        <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md mt-4" type="button" @click="umkmFormOpen = true">Daftar sebagai Mitra UMKM</button>
       </div>
       <form v-else class="mt-4 flex flex-col gap-3" @submit.prevent="daftarUmkm">
         <div>
@@ -200,7 +200,7 @@ async function hapus(a) {
         </div>
         <p v-if="umkmFormError" class="rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ umkmFormError }}</p>
         <div class="flex flex-wrap gap-2">
-          <button class="btn-primary" type="submit" :disabled="umkmSaving">{{ umkmSaving ? 'Mengirim…' : 'Kirim pendaftaran' }}</button>
+          <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md" type="submit" :disabled="umkmSaving">{{ umkmSaving ? 'Mengirim…' : 'Kirim pendaftaran' }}</button>
           <button class="btn-outline" type="button" :disabled="umkmSaving" @click="umkmFormOpen = false">Batal</button>
         </div>
       </form>
@@ -222,7 +222,7 @@ async function hapus(a) {
           <div class="mt-2 flex gap-4 font-semibold">
             <button type="button" class="underline" @click="bukaForm(a)">Ubah</button>
             <button v-if="!a.is_default" type="button" class="underline" @click="jadikanUtama(a)">Jadikan utama</button>
-            <button type="button" class="text-bad-fg underline" @click="hapus(a)">Hapus</button>
+            <button type="button" class="text-gray-900 underline" @click="hapus(a)">Hapus</button>
           </div>
         </li>
       </ul>
@@ -236,7 +236,7 @@ async function hapus(a) {
           <input id="p-sandi" v-model="pwd" class="input" type="password" autocomplete="new-password" minlength="8" required />
           <p class="mt-1 text-xs text-muted">Minimal 8 karakter.</p>
         </div>
-        <button class="btn-primary w-fit" type="submit">Ubah kata sandi</button>
+        <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md w-fit" type="submit">Ubah kata sandi</button>
         <p v-if="pwdMsg" class="text-sm text-ok-fg" role="status">{{ pwdMsg }}</p>
         <p v-if="pwdErr" class="text-sm text-bad-fg" role="alert">{{ pwdErr }}</p>
       </form>
@@ -255,7 +255,7 @@ async function hapus(a) {
       <p v-if="formErr" class="rounded-xl bg-bad-bg p-3 text-sm text-bad-fg sm:col-span-2" role="alert">{{ formErr }}</p>
       <div class="flex justify-end gap-2 sm:col-span-2">
         <button class="btn-outline" type="button" @click="open = false">Batal</button>
-        <button class="btn-primary" type="submit" :disabled="saving">{{ saving ? 'Menyimpan…' : 'Simpan' }}</button>
+        <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md" type="submit" :disabled="saving">{{ saving ? 'Menyimpan…' : 'Simpan' }}</button>
       </div>
     </form>
   </ModalDialog>

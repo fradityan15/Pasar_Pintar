@@ -18,7 +18,7 @@ watch(() => props.open, async (v) => {
     <div class="p-6">
       <div class="flex items-start justify-between gap-4">
         <h2 class="text-lg font-semibold">{{ title }}</h2>
-        <button type="button" class="h-8 w-8 rounded-lg text-xl leading-none hover:bg-surface" aria-label="Tutup" @click="emit('close')">×</button>
+        <button type="button" class="h-8 w-8 rounded-lg border border-gray-900 text-xl leading-none text-gray-900 hover:bg-gray-50" aria-label="Tutup" @click="emit('close')">×</button>
       </div>
       <div class="mt-4"><slot /></div>
     </div>

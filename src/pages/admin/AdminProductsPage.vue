@@ -83,7 +83,7 @@ async function lihatDetail(product) {
       <button
         v-for="[val, label] in tabs" :key="val" type="button" role="tab" :aria-selected="str('status') === val"
         class="-mb-px border-b-2 px-1 py-3 text-sm"
-        :class="str('status') === val ? 'border-ink font-semibold text-ink' : 'border-transparent text-muted'"
+        :class="str('status') === val ? 'border-gray-900 font-semibold text-gray-900' : 'border-transparent text-muted'"
         @click="set({ status: val, page: 1 })"
       >{{ label }}</button>
     </div>
@@ -115,17 +115,17 @@ async function lihatDetail(product) {
             </td>
             <td class="p-3">{{ p.categories?.name || '-' }}</td>
             <td class="p-3">{{ p.umkm?.name }}</td>
-            <td class="p-3">{{ formatRupiah(p.price) }}</td>
+            <td class="p-3 font-bold text-gray-900">{{ formatRupiah(p.price) }}</td>
             <td class="p-3">
               {{ p.stock }}
               <span v-if="p.is_active && p.stock <= 10" class="badge ml-1 bg-warn-bg text-warn-fg">{{ p.stock === 0 ? 'Habis' : 'Menipis' }}</span>
             </td>
             <td class="p-3"><span class="badge" :class="p.is_active ? 'bg-ok-bg text-ok-fg' : 'bg-surface text-muted'">{{ p.is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
             <td class="whitespace-nowrap p-3 text-right">
-              <button class="rounded-lg border border-line px-3 py-2 font-semibold text-ink transition hover:bg-surface" type="button" @click="lihatDetail(p)">Detail</button>
+              <button class="rounded-lg border border-gray-900 px-3 py-2 font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="lihatDetail(p)">Detail</button>
               <button
                 v-if="p.is_active"
-                class="ml-2 rounded-lg border border-red-200 px-3 py-2 font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-50"
+                class="ml-2 rounded-lg border border-gray-900 px-3 py-2 font-semibold text-gray-900 transition hover:bg-gray-50 disabled:cursor-wait disabled:opacity-50"
                 type="button"
                 :disabled="moderatingId === p.id"
                 @click="toggle(p)"
@@ -152,7 +152,7 @@ async function lihatDetail(product) {
         <div><dt class="text-muted">UMKM</dt><dd class="mt-0.5 font-semibold">{{ detail.umkm?.name || '-' }}</dd></div>
         <div><dt class="text-muted">Kategori</dt><dd class="mt-0.5 font-semibold">{{ detail.categories?.name || '-' }}</dd></div>
         <div><dt class="text-muted">Slug</dt><dd class="mt-0.5 break-all font-semibold">{{ detail.slug }}</dd></div>
-        <div><dt class="text-muted">Harga</dt><dd class="mt-0.5 font-semibold">{{ formatRupiah(detail.price) }}</dd></div>
+        <div><dt class="text-muted">Harga</dt><dd class="mt-0.5 font-bold text-gray-900">{{ formatRupiah(detail.price) }}</dd></div>
         <div><dt class="text-muted">Stok</dt><dd class="mt-0.5 font-semibold">{{ detail.stock }}</dd></div>
         <div><dt class="text-muted">Status</dt><dd class="mt-0.5 font-semibold">{{ detail.is_active ? 'Aktif' : 'Nonaktif' }}</dd></div>
         <div><dt class="text-muted">Dibuat</dt><dd class="mt-0.5 font-semibold">{{ formatTanggalJam(detail.created_at) }}</dd></div>

@@ -84,7 +84,7 @@ async function keluar() {
           :class="{ 'lg:justify-center': !sidebarVisible }"
           :title="!sidebarVisible ? item.label : undefined"
           :aria-label="!sidebarVisible ? item.label : undefined"
-          active-class="!bg-white !font-semibold !text-ink shadow-sm"
+          active-class="!bg-white !font-semibold !text-gray-900 shadow-sm"
           @click="mobileSidebarOpen = false"
         >
           <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path :d="item.icon" /></svg>

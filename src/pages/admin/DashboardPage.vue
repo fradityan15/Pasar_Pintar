@@ -26,8 +26,8 @@ const metricCards = computed(() => [
     label: 'Total Pendapatan Platform',
     value: formatRupiah(analytics.value?.total_pendapatan_platform),
     detail: 'GMV produk dari transaksi sukses',
-    iconClass: 'bg-blue-50 text-blue-700',
-    iconPath: 'M12 2v20m5-15H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
+    iconClass: 'bg-gray-100 text-gray-900',
+    iconLabel: 'Rp',
   },
   {
     label: 'Jumlah UMKM Aktif',
@@ -143,7 +143,8 @@ onMounted(load)
               <p class="mt-3 break-words text-2xl font-bold tracking-tight text-slate-900">{{ card.value }}</p>
             </div>
             <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" :class="card.iconClass" aria-hidden="true">
-              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <span v-if="card.iconLabel" class="text-sm font-bold">{{ card.iconLabel }}</span>
+              <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path :d="card.iconPath" />
               </svg>
             </span>
@@ -193,7 +194,7 @@ onMounted(load)
                 </td>
                 <td class="px-6 py-4 text-left font-semibold text-slate-800">{{ umkm.nama }}</td>
                 <td class="px-6 py-4 text-center text-slate-600">{{ numberFormat.format(Number(umkm.jumlah_transaksi)) }}</td>
-                <td class="px-6 py-4 text-right font-semibold text-slate-900">{{ formatRupiah(umkm.total_penjualan) }}</td>
+                <td class="px-6 py-4 text-right font-bold text-gray-900">{{ formatRupiah(umkm.total_penjualan) }}</td>
               </tr>
             </tbody>
           </table>

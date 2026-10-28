@@ -153,7 +153,7 @@ function ubahFilter(key, value) {
       <button
         v-for="[val, label] in tabs" :key="val" type="button" role="tab" :aria-selected="str('status') === val"
         class="-mb-px border-b-2 px-1 py-3 text-sm"
-        :class="str('status') === val ? 'border-ink font-semibold text-ink' : 'border-transparent text-muted'"
+        :class="str('status') === val ? 'border-gray-900 font-semibold text-gray-900' : 'border-transparent text-muted'"
         @click="set({ status: val, page: 1 })"
       >{{ label }}</button>
     </div>
@@ -189,7 +189,7 @@ function ubahFilter(key, value) {
             <td class="p-3">{{ o.profiles?.full_name || '-' }}</td>
             <td class="max-w-56 truncate p-3" :title="namaMitra(o)">{{ namaMitra(o) }}</td>
             <td class="p-3 text-muted">{{ formatTanggalJam(o.created_at) }}</td>
-            <td class="p-3">{{ formatRupiah(o.total) }}</td>
+            <td class="p-3 font-bold text-gray-900">{{ formatRupiah(o.total) }}</td>
             <td class="p-3">{{ o.payment_methods?.name || labelPembayaran(o.payment_method) }}</td>
             <td class="p-3"><StatusBadge :status="o.status" /></td>
             <td class="p-3 text-right"><RouterLink :to="{ name: 'admin-pesanan-detail', params: { id: o.id } }" class="font-semibold underline">Detail</RouterLink></td>

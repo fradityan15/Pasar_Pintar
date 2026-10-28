@@ -1,4 +1,9 @@
-const rupiah = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })
+const rupiah = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  currencyDisplay: 'symbol',
+  maximumFractionDigits: 0,
+})
 
 export const formatRupiah = (n) => rupiah.format(Number(n) || 0)
 

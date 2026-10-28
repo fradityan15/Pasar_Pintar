@@ -58,7 +58,7 @@ async function ubahPeran(u, role) {
       <button
         v-for="[val, label] in tabs" :key="val" type="button" role="tab" :aria-selected="str('role') === val"
         class="-mb-px border-b-2 px-1 py-3 text-sm"
-        :class="str('role') === val ? 'border-ink font-semibold text-ink' : 'border-transparent text-muted'"
+        :class="str('role') === val ? 'border-gray-900 font-semibold text-gray-900' : 'border-transparent text-muted'"
         @click="set({ role: val, page: 1 })"
       >{{ label }}</button>
     </div>

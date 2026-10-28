@@ -32,7 +32,7 @@ onMounted(load)
     <p v-else-if="!items.length" class="mt-6 rounded-xl bg-surface p-8 text-center text-sm text-muted">Belum ada UMKM terdaftar.</p>
     <ul v-else class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <li v-for="u in items" :key="u.id">
-        <RouterLink :to="{ name: 'umkm-detail', params: { slug: u.slug } }" class="card block h-full p-5 hover:bg-surface">
+        <RouterLink :to="{ name: 'umkm-detail', params: { slug: u.slug } }" class="card block h-full p-5 hover:bg-gray-50">
           <p class="flex flex-wrap items-center gap-2 text-lg font-semibold">
             {{ u.name }}
             <span v-if="u.is_verified" class="badge bg-ok-bg text-ok-fg">Terverifikasi</span>

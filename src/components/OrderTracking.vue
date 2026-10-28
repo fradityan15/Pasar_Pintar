@@ -48,7 +48,9 @@ function statusLabel(status) {
 }
 
 function statusColor(status) {
-  if (status === 'selesai') return 'bg-emerald-600 ring-emerald-100'
+  if (status === 'selesai') {
+    return props.userRole === 'buyer' ? 'bg-indigo-600 ring-indigo-100' : 'bg-emerald-600 ring-emerald-100'
+  }
   if (status === 'dibatalkan') return 'bg-red-600 ring-red-100'
   if (status === 'menunggu_pembayaran') return 'bg-amber-500 ring-amber-100'
   if (status === 'menunggu_diproses') return 'bg-sky-500 ring-sky-100'
@@ -60,7 +62,11 @@ function statusColor(status) {
   <section class="rounded-xl bg-white shadow-sm ring-1 ring-slate-200" :class="compact ? 'p-4' : 'p-5 sm:p-6'" aria-labelledby="order-tracking-title">
     <div class="flex items-start justify-between gap-3">
       <div class="flex items-center gap-2.5">
-        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700" aria-hidden="true">
+        <span
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+          :class="userRole === 'buyer' ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'"
+          aria-hidden="true"
+        >
           <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
             <circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2" />
           </svg>
@@ -70,7 +76,13 @@ function statusColor(status) {
         <p class="mt-1 text-sm text-slate-500">Riwayat perubahan status pesanan.</p>
         </div>
       </div>
-      <button class="text-sm font-semibold text-emerald-700 hover:underline disabled:opacity-50" type="button" :disabled="loading" @click="load">Muat ulang</button>
+      <button
+        class="text-sm font-semibold hover:underline disabled:opacity-50"
+        :class="userRole === 'buyer' ? 'text-gray-900' : 'text-gray-900'"
+        type="button"
+        :disabled="loading"
+        @click="load"
+      >Muat ulang</button>
     </div>
 
     <div v-if="loading" class="mt-5 space-y-4" aria-live="polite">

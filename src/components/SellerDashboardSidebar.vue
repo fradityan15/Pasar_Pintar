@@ -19,7 +19,7 @@ const activeItem = computed(() => {
 const linkClass = (isActive) => [
   'flex shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition lg:w-full',
   isActive
-    ? 'bg-emerald-50 font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-100'
+    ? 'bg-gray-100 font-semibold text-gray-900 ring-1 ring-inset ring-gray-200'
     : 'font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900',
 ]
 </script>

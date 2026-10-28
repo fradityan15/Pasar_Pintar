@@ -132,11 +132,11 @@ async function buatPesanan() {
 
 <template>
   <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
-    <RouterLink :to="{ name: 'keranjang' }" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-emerald-700">
+    <RouterLink :to="{ name: 'keranjang' }" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-gray-900">
       <span aria-hidden="true">←</span> Kembali ke keranjang
     </RouterLink>
     <div class="mt-3">
-      <p class="text-sm font-medium text-emerald-700">Satu langkah lagi menuju pesanan Anda</p>
+      <p class="text-sm font-medium text-indigo-700">Satu langkah lagi menuju pesanan Anda</p>
       <h1 class="mt-1 text-3xl font-bold text-slate-900">Checkout</h1>
     </div>
 
@@ -147,14 +147,14 @@ async function buatPesanan() {
 
     <div v-else-if="!checkoutItems.length" class="mt-6 rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
       <p class="font-semibold text-slate-900">Tidak ada barang terpilih untuk di-checkout</p>
-      <RouterLink :to="{ name: 'keranjang' }" class="btn-primary mt-5 inline-flex rounded-xl px-6 py-3">Kembali ke keranjang</RouterLink>
+      <RouterLink :to="{ name: 'keranjang' }" class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md mt-5 inline-flex rounded-xl px-6 py-3">Kembali ke keranjang</RouterLink>
     </div>
 
     <div v-else class="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
       <div class="flex min-w-0 flex-col gap-5">
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div class="flex items-start gap-3">
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700" aria-hidden="true">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-700" aria-hidden="true">
               <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
             </span>
             <div class="min-w-0 flex-1">
@@ -167,7 +167,7 @@ async function buatPesanan() {
               <p v-else class="mt-3 text-sm text-slate-500">Tambahkan alamat untuk melanjutkan checkout.</p>
               <button
                 v-if="addresses.length"
-                class="mt-4 inline-flex min-h-10 items-center justify-center rounded-lg border border-emerald-200 px-4 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                class="mt-4 inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-900 px-4 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
                 type="button"
                 @click="showAddressPicker = true; showForm = false"
               >Ubah / Pilih Alamat Lain</button>
@@ -185,7 +185,7 @@ async function buatPesanan() {
             <div><label for="a-pos" class="mb-1 block text-sm font-medium text-slate-700">Kode pos</label><input id="a-pos" v-model="form.postal_code" class="input" inputmode="numeric" /></div>
             <div class="sm:col-span-2"><label for="a-jalan" class="mb-1 block text-sm font-medium text-slate-700">Alamat lengkap</label><input id="a-jalan" v-model="form.street" class="input" autocomplete="street-address" required /></div>
             <div class="flex gap-2 sm:col-span-2">
-              <button class="btn-primary rounded-lg px-4 py-2.5" type="submit" :disabled="savingAddr">{{ savingAddr ? 'Menyimpan…' : 'Simpan dan gunakan alamat' }}</button>
+              <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md rounded-lg px-4 py-2.5" type="submit" :disabled="savingAddr">{{ savingAddr ? 'Menyimpan…' : 'Simpan dan gunakan alamat' }}</button>
               <button v-if="addresses.length" class="btn-outline" type="button" @click="showForm = false">Batal</button>
             </div>
           </form>
@@ -202,16 +202,16 @@ async function buatPesanan() {
               v-for="option in shippingOptions"
               :key="option.id"
               class="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition"
-              :class="shippingMethod === option.id ? 'border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600' : 'border-slate-200 hover:border-slate-300'"
+              :class="shippingMethod === option.id ? 'border-gray-900 bg-gray-50/60 ring-1 ring-gray-900' : 'border-slate-200 hover:border-slate-300'"
             >
-              <input v-model="shippingMethod" type="radio" name="pengiriman" :value="option.id" class="mt-1 h-4 w-4 border-slate-300 text-emerald-700 focus:ring-emerald-600" />
+              <input v-model="shippingMethod" type="radio" name="pengiriman" :value="option.id" class="mt-1 h-4 w-4 border-slate-300 text-gray-900 focus:ring-gray-900 accent-gray-900" />
               <span class="min-w-0 flex-1">
                 <span class="flex items-center justify-between gap-2">
                   <span class="text-sm font-semibold text-slate-900">{{ option.name }}</span>
-                  <span class="text-sm font-semibold text-slate-900">{{ formatRupiah(option.price) }}</span>
+                  <span class="text-sm font-bold text-gray-900">{{ formatRupiah(option.price) }}</span>
                 </span>
                 <span class="mt-1 block text-xs text-slate-500">{{ option.detail }}</span>
-                <span class="mt-2 block text-xs font-medium text-emerald-800">Layanan pengiriman standar</span>
+                <span class="mt-2 block text-xs font-medium text-indigo-800">Layanan pengiriman standar</span>
               </span>
             </label>
           </fieldset>
@@ -227,9 +227,9 @@ async function buatPesanan() {
             <template v-for="paymentMethod in paymentMethods" :key="paymentMethod.id">
               <label
                 class="flex cursor-pointer items-center gap-4 rounded-xl border p-4 transition-colors hover:bg-slate-50"
-                :class="selectedPaymentMethodId === paymentMethod.id ? 'border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600' : 'border-slate-200'"
+                :class="selectedPaymentMethodId === paymentMethod.id ? 'border-gray-900 bg-gray-50 ring-1 ring-gray-900' : 'border-slate-200'"
               >
-                <input v-model="selectedPaymentMethodId" type="radio" name="metode" :value="paymentMethod.id" class="h-4 w-4 border-slate-300 text-emerald-700 focus:ring-emerald-600" />
+                <input v-model="selectedPaymentMethodId" type="radio" name="metode" :value="paymentMethod.id" class="h-4 w-4 border-slate-300 text-gray-900 focus:ring-gray-900 accent-gray-900" />
                 <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-slate-600 ring-1 ring-slate-200" aria-hidden="true">
                   <svg v-if="paymentMethod.category === 'qris'" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.7">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zm4 0h2v6h-2zm-4 4h2v2h-2z" />
@@ -251,7 +251,7 @@ async function buatPesanan() {
                 </span>
               </label>
 
-              <div v-if="selectedPaymentMethodId === paymentMethod.id" class="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+              <div v-if="selectedPaymentMethodId === paymentMethod.id" class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
                 <div v-if="paymentMethod.category === 'qris'" class="flex flex-col items-center gap-3 text-center">
                   <p class="text-sm leading-6 text-slate-600">Scan QR Code ini menggunakan aplikasi e-wallet atau m-banking Anda.</p>
                   <img
@@ -290,21 +290,21 @@ async function buatPesanan() {
             </div>
             <div class="min-w-0 flex-1">
               <p class="line-clamp-2 text-sm font-medium text-slate-800">{{ item.products.name }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ item.quantity }} × {{ formatRupiah(item.products.price) }}</p>
+              <p class="mt-1 text-xs font-bold text-gray-900">{{ item.quantity }} × {{ formatRupiah(item.products.price) }}</p>
             </div>
-            <p class="shrink-0 text-right text-sm font-semibold text-slate-900">{{ formatRupiah(item.products.price * item.quantity) }}</p>
+            <p class="shrink-0 text-right text-sm font-bold text-gray-900">{{ formatRupiah(item.products.price * item.quantity) }}</p>
           </li>
         </ul>
 
         <dl class="mt-5 space-y-3 border-t border-slate-100 pt-4 text-sm">
-          <div class="flex justify-between gap-3"><dt class="text-slate-500">Subtotal produk</dt><dd class="text-right font-medium text-slate-800">{{ formatRupiah(checkoutSubtotal) }}</dd></div>
-          <div class="flex justify-between gap-3"><dt class="text-slate-500">Pengiriman · {{ selectedShipping?.name }}</dt><dd class="text-right font-medium text-slate-800">{{ formatRupiah(shippingCost) }}</dd></div>
-          <div class="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-bold"><dt class="text-slate-900">Total pembayaran</dt><dd class="text-right text-emerald-800">{{ formatRupiah(total) }}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="text-slate-500">Subtotal produk</dt><dd class="text-right font-bold text-gray-900">{{ formatRupiah(checkoutSubtotal) }}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="text-slate-500">Pengiriman · {{ selectedShipping?.name }}</dt><dd class="text-right font-bold text-gray-900">{{ formatRupiah(shippingCost) }}</dd></div>
+          <div class="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-bold"><dt class="text-slate-900">Total pembayaran</dt><dd class="text-right font-bold text-gray-900">{{ formatRupiah(total) }}</dd></div>
         </dl>
 
         <p v-if="error" class="mt-4 rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ error }}</p>
         <button
-          class="btn-primary mt-5 min-h-12 w-full rounded-xl text-sm font-semibold shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+          class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md mt-5 min-h-12 w-full rounded-xl text-sm font-semibold shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
           type="button"
           :disabled="placing || !selected || !selectedPaymentMethodId || checkoutProblems.length > 0"
           @click="buatPesanan"
@@ -329,7 +329,7 @@ async function buatPesanan() {
             v-for="address in addresses"
             :key="address.id"
             class="w-full rounded-xl border p-4 text-left transition"
-            :class="selected === address.id ? 'border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600' : 'border-slate-200 hover:border-slate-300'"
+            :class="selected === address.id ? 'border-gray-900 bg-gray-50/60 ring-1 ring-gray-900' : 'border-slate-200 hover:border-slate-300'"
             type="button"
             @click="selected = address.id; showAddressPicker = false"
           >
@@ -340,7 +340,7 @@ async function buatPesanan() {
             <span class="mt-1 block text-xs text-slate-500">{{ address.phone }}</span>
             <span class="mt-1 block text-sm leading-5 text-slate-600">{{ address.street }}, {{ address.city }}, {{ address.province }} {{ address.postal_code }}</span>
           </button>
-          <button class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-emerald-200 px-4 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50" type="button" @click="mulaiTambahAlamat">
+          <button class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-gray-900 px-4 text-sm font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="mulaiTambahAlamat">
             <span aria-hidden="true">+</span> Tambah alamat baru
           </button>
         </div>
@@ -355,7 +355,7 @@ async function buatPesanan() {
           <div><label for="modal-a-pos" class="mb-1 block text-sm font-medium text-slate-700">Kode pos</label><input id="modal-a-pos" v-model="form.postal_code" class="input" inputmode="numeric" /></div>
           <div class="sm:col-span-2"><label for="modal-a-jalan" class="mb-1 block text-sm font-medium text-slate-700">Alamat lengkap</label><input id="modal-a-jalan" v-model="form.street" class="input" autocomplete="street-address" required /></div>
           <div class="flex gap-2 sm:col-span-2">
-            <button class="btn-primary rounded-lg px-4 py-2.5" type="submit" :disabled="savingAddr">{{ savingAddr ? 'Menyimpan…' : 'Simpan dan gunakan alamat' }}</button>
+            <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md rounded-lg px-4 py-2.5" type="submit" :disabled="savingAddr">{{ savingAddr ? 'Menyimpan…' : 'Simpan dan gunakan alamat' }}</button>
             <button class="btn-outline" type="button" @click="showForm = false">Kembali ke daftar alamat</button>
           </div>
         </form>

@@ -115,24 +115,24 @@ async function kirimUlasan() {
     <div v-else-if="!orders.length" class="mt-6 rounded-xl bg-surface p-10 text-center">
       <p class="font-semibold">Belum ada pesanan</p>
       <p class="mt-1 text-sm text-muted">Pesanan yang Anda buat akan muncul di sini.</p>
-      <RouterLink :to="{ name: 'katalog' }" class="btn-primary mt-5">Mulai belanja</RouterLink>
+      <RouterLink :to="{ name: 'katalog' }" class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md mt-5">Mulai belanja</RouterLink>
     </div>
     <ul v-else class="mt-6 flex flex-col gap-3">
       <li v-for="o in orders" :key="o.id">
         <div class="card p-4">
-          <RouterLink :to="{ name: 'pesanan-detail', params: { id: o.id } }" class="flex flex-wrap items-center justify-between gap-3 rounded-lg hover:bg-surface">
+          <RouterLink :to="{ name: 'pesanan-detail', params: { id: o.id } }" class="flex flex-wrap items-center justify-between gap-3 rounded-lg hover:bg-gray-50">
             <div class="min-w-0">
               <p class="font-semibold">{{ o.order_no }} <span class="ml-1 text-sm font-normal text-muted">{{ formatTanggal(o.created_at) }}</span></p>
               <p class="mt-1 max-w-md truncate text-sm text-muted">{{ ringkas(o) }}</p>
             </div>
             <div class="flex items-center gap-3">
               <span class="badge" :class="ORDER_STATUS[o.status].cls">{{ ORDER_STATUS[o.status].label }}</span>
-              <span class="font-semibold">{{ formatRupiah(o.total) }}</span>
+              <span class="font-bold text-gray-900">{{ formatRupiah(o.total) }}</span>
             </div>
           </RouterLink>
           <div v-if="bisaDibatalkan(o)" class="mt-3 flex justify-end border-t border-line pt-3">
             <button
-              class="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+              class="rounded-lg border border-gray-900 px-3 py-2 text-xs font-semibold text-gray-900 transition hover:bg-gray-50"
               type="button"
               @click="cancelTarget = o; cancelError = ''"
             >Batalkan Pesanan</button>
@@ -143,7 +143,7 @@ async function kirimUlasan() {
               <li v-for="item in o.order_items.filter((row) => row.product_id)" :key="item.product_id" class="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span class="min-w-0 flex-1 truncate">{{ item.product_name }}</span>
                 <span v-if="sudahDiulas(item.product_id)" class="text-xs font-medium text-ok-fg">Sudah diulas</span>
-                <button v-else class="rounded-lg border border-emerald-700 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50" type="button" @click="mulaiUlasan(item)">
+                <button v-else class="rounded-lg border border-gray-900 px-3 py-2 text-xs font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="mulaiUlasan(item)">
                   Beri Ulasan
                 </button>
               </li>
@@ -162,7 +162,7 @@ async function kirimUlasan() {
               v-for="star in 5"
               :key="star"
               class="rounded p-1 text-3xl leading-none transition hover:scale-110 focus-visible:outline-2"
-              :class="star <= reviewRating ? 'text-amber-400' : 'text-slate-300'"
+              :class="star <= reviewRating ? 'text-gray-900' : 'text-slate-300'"
               type="button"
               :aria-label="`${star} bintang`"
               :aria-pressed="reviewRating === star"
@@ -178,7 +178,7 @@ async function kirimUlasan() {
         <p v-if="reviewError" class="rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ reviewError }}</p>
         <div class="flex justify-end gap-2">
           <button class="btn-outline" type="button" :disabled="reviewSaving" @click="reviewOpen = false">Batal</button>
-          <button class="btn-primary" type="submit" :disabled="reviewSaving">{{ reviewSaving ? 'Mengirim…' : 'Kirim ulasan' }}</button>
+          <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md" type="submit" :disabled="reviewSaving">{{ reviewSaving ? 'Mengirim…' : 'Kirim ulasan' }}</button>
         </div>
       </form>
     </ModalDialog>
@@ -192,7 +192,7 @@ async function kirimUlasan() {
         <p v-if="cancelError" class="rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ cancelError }}</p>
         <div class="flex justify-end gap-2">
           <button class="btn-outline" type="button" :disabled="cancelSaving" @click="cancelTarget = null">Kembali</button>
-          <button class="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-50" type="button" :disabled="cancelSaving" @click="batalkanPesanan">
+          <button class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50" type="button" :disabled="cancelSaving" @click="batalkanPesanan">
             {{ cancelSaving ? 'Membatalkan…' : 'Ya, batalkan' }}
           </button>
         </div>

@@ -87,13 +87,13 @@ async function konfirmasiPembayaran() {
         <h2 class="text-base font-semibold">Barang</h2>
         <ul class="mt-3 flex flex-col gap-2 text-sm">
           <li v-for="i in order.order_items" :key="i.id" class="flex justify-between gap-3">
-            <span>{{ i.product_name }} × {{ i.quantity }}</span><span>{{ formatRupiah(i.unit_price * i.quantity) }}</span>
+            <span>{{ i.product_name }} × {{ i.quantity }}</span><span class="font-bold text-gray-900">{{ formatRupiah(i.unit_price * i.quantity) }}</span>
           </li>
         </ul>
         <dl class="mt-3 flex flex-col gap-2 border-t border-line pt-3 text-sm">
-          <div class="flex justify-between"><dt class="text-muted">Subtotal</dt><dd>{{ formatRupiah(order.subtotal) }}</dd></div>
-          <div class="flex justify-between"><dt class="text-muted">Ongkir</dt><dd>{{ formatRupiah(order.shipping_cost) }}</dd></div>
-          <div class="flex justify-between text-base font-bold"><dt>Total</dt><dd>{{ formatRupiah(order.total) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-muted">Subtotal</dt><dd class="font-bold text-gray-900">{{ formatRupiah(order.subtotal) }}</dd></div>
+          <div class="flex justify-between"><dt class="text-muted">Ongkir</dt><dd class="font-bold text-gray-900">{{ formatRupiah(order.shipping_cost) }}</dd></div>
+          <div class="flex justify-between text-base font-bold text-gray-900"><dt>Total</dt><dd>{{ formatRupiah(order.total) }}</dd></div>
         </dl>
         <p class="mt-3 text-xs text-muted">Pembayaran: {{ order.payment_methods?.name || PAYMENT_METHOD[order.payment_method] || order.payment_method }} · {{ order.payment_status.replace('_', ' ') }}</p>
       </section>

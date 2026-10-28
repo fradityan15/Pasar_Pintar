@@ -191,7 +191,7 @@ async function simpan() {
 
       <label
         for="f-foto"
-        class="mt-4 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-line bg-surface p-5 text-center transition hover:border-ink/50 hover:bg-[#EFEFF2]"
+        class="mt-4 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-line bg-surface p-5 text-center transition hover:border-gray-900 hover:bg-gray-50"
         @dragover.prevent
         @drop.prevent="dropFoto"
       >
@@ -208,7 +208,7 @@ async function simpan() {
           <img :src="photo.url" :alt="photo.file.name" class="aspect-square w-full rounded-xl object-cover" />
           <button
             type="button"
-            class="absolute right-2 top-2 rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-ink shadow"
+            class="absolute right-2 top-2 rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-gray-900 shadow"
             @click="hapusFotoPending(index)"
           >Hapus / Ganti</button>
         </li>
@@ -220,7 +220,7 @@ async function simpan() {
           <div class="mt-1.5 flex items-center justify-between gap-1">
             <span v-if="i === 0" class="badge bg-ok-bg text-ok-fg">Utama</span>
             <button v-else type="button" class="font-semibold underline" @click="jadikanUtama(img)">Jadikan utama</button>
-            <button type="button" class="font-semibold text-bad-fg underline" @click="hapusFoto(img)">Hapus</button>
+            <button type="button" class="font-semibold text-gray-900 underline" @click="hapusFoto(img)">Hapus</button>
           </div>
         </li>
       </ul>

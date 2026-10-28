@@ -235,7 +235,7 @@ async function simpanPerubahan() {
               v-for="tab in tabs"
               :key="tab.id"
               class="whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition"
-              :class="activeTab === tab.id ? 'border-emerald-700 text-emerald-800' : 'border-transparent text-slate-500 hover:text-slate-800'"
+              :class="activeTab === tab.id ? 'border-gray-900 text-gray-900' : 'border-transparent text-slate-500 hover:text-slate-800'"
               type="button"
               :aria-current="activeTab === tab.id ? 'page' : undefined"
               @click="activeTab = tab.id"
@@ -251,22 +251,22 @@ async function simpanPerubahan() {
               <div class="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
                 <div>
                   <p class="mb-2 text-sm font-medium text-slate-700">Logo Toko</p>
-                  <label class="group relative flex h-36 w-36 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-center transition hover:border-emerald-600 hover:bg-emerald-50">
+                  <label class="group relative flex h-36 w-36 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-center transition hover:border-gray-900 hover:bg-gray-50">
                     <img v-if="logoPreview || form.logo_url" :src="logoPreview || form.logo_url" alt="Pratinjau logo toko" class="h-full w-full object-cover" />
                     <span v-else class="px-4 text-xs leading-5 text-slate-500">Klik untuk unggah logo</span>
                     <input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" @change="pilihGambar('logo', $event)" />
                   </label>
-                  <button v-if="logoPreview || form.logo_url" class="mt-2 text-xs font-medium text-red-700 hover:underline" type="button" @click="hapusGambar('logo')">Hapus logo</button>
+                  <button v-if="logoPreview || form.logo_url" class="mt-2 text-xs font-medium text-gray-900 hover:underline" type="button" @click="hapusGambar('logo')">Hapus logo</button>
                   <p class="mt-2 text-xs text-slate-500">JPG, PNG, WebP · maks. 4 MB</p>
                 </div>
                 <div>
                   <p class="mb-2 text-sm font-medium text-slate-700">Banner Toko</p>
-                  <label class="group relative flex aspect-[3/1] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-center transition hover:border-emerald-600 hover:bg-emerald-50">
+                  <label class="group relative flex aspect-[3/1] w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-center transition hover:border-gray-900 hover:bg-gray-50">
                     <img v-if="bannerPreview || form.banner_url" :src="bannerPreview || form.banner_url" alt="Pratinjau banner toko" class="absolute inset-0 h-full w-full object-cover" />
                     <span v-else class="px-4 text-sm text-slate-500">Klik untuk unggah banner toko</span>
                     <input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" @change="pilihGambar('banner', $event)" />
                   </label>
-                  <button v-if="bannerPreview || form.banner_url" class="mt-2 text-xs font-medium text-red-700 hover:underline" type="button" @click="hapusGambar('banner')">Hapus banner</button>
+                  <button v-if="bannerPreview || form.banner_url" class="mt-2 text-xs font-medium text-gray-900 hover:underline" type="button" @click="hapusGambar('banner')">Hapus banner</button>
                   <p class="mt-2 text-xs text-slate-500">Saran rasio 3:1 · JPG, PNG, WebP · maks. 4 MB</p>
                 </div>
               </div>
@@ -308,8 +308,8 @@ async function simpanPerubahan() {
               <div>
                 <h3 class="text-sm font-semibold text-slate-800">Jasa kurir yang diaktifkan</h3>
                 <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  <label v-for="courier in couriers" :key="courier" class="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 text-sm text-slate-700 hover:border-emerald-300">
-                    <input :checked="form.shipping_providers.includes(courier)" class="h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600" type="checkbox" @change="toggleKurir(courier)" />
+                  <label v-for="courier in couriers" :key="courier" class="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 p-3 text-sm text-slate-700 hover:border-gray-300">
+                    <input :checked="form.shipping_providers.includes(courier)" class="h-4 w-4 rounded border-slate-300 text-gray-900 focus:ring-gray-900 accent-gray-900" type="checkbox" @change="toggleKurir(courier)" />
                     {{ courier }}
                   </label>
                 </div>
@@ -347,7 +347,7 @@ async function simpanPerubahan() {
               <div class="divide-y divide-slate-100 rounded-xl border border-slate-200">
                 <div v-for="day in days" :key="day.id" class="grid gap-3 p-4 sm:grid-cols-[120px_1fr_1fr] sm:items-center">
                   <label class="flex items-center gap-2.5 text-sm font-medium text-slate-800">
-                    <input v-model="form.opening_hours[day.id].enabled" class="h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600" type="checkbox" />
+                    <input v-model="form.opening_hours[day.id].enabled" class="h-4 w-4 rounded border-slate-300 text-gray-900 focus:ring-gray-900 accent-gray-900" type="checkbox" />
                     {{ day.label }}
                   </label>
                   <label class="text-xs text-slate-500">Buka
@@ -364,7 +364,7 @@ async function simpanPerubahan() {
           <div class="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white/95 px-5 py-4 backdrop-blur sm:px-7">
             <p v-if="currentRegion" class="text-xs text-slate-500">Lokasi toko: {{ currentRegion.name }}, {{ currentRegion.province }}</p>
             <span v-else class="text-xs text-slate-500">Perubahan berlaku setelah disimpan.</span>
-            <button class="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60" type="submit" :disabled="saving">
+            <button class="inline-flex min-h-11 items-center justify-center rounded-lg bg-gray-900 px-5 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-wait disabled:opacity-60" type="submit" :disabled="saving">
               {{ saving ? 'Menyimpan...' : 'Simpan Perubahan' }}
             </button>
           </div>

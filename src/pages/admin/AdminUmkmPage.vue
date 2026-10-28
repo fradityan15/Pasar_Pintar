@@ -114,7 +114,7 @@ async function setujuiPendaftaran(u) {
             </td>
             <td class="p-3"><span class="badge" :class="u.is_active ? 'bg-ok-bg text-ok-fg' : 'bg-surface text-muted'">{{ u.is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
             <td class="whitespace-nowrap p-3 text-right">
-              <button v-if="u.status === 'pending'" class="font-semibold text-ok-fg underline" type="button" @click="setujuiPendaftaran(u)">Setujui</button>
+              <button v-if="u.status === 'pending'" class="font-semibold text-gray-900 underline" type="button" @click="setujuiPendaftaran(u)">Setujui</button>
               <button class="font-semibold underline" type="button" @click="bukaForm(u)">Ubah</button>
               <button class="ml-3 font-semibold underline" type="button" @click="toggleVerif(u)">{{ u.is_verified ? 'Cabut verifikasi' : 'Verifikasi' }}</button>
             </td>

@@ -61,7 +61,7 @@ async function submit() {
 
     <p class="mt-6 text-center text-sm text-muted">
       Sudah punya akun?
-      <RouterLink :to="{ name: 'login' }" class="font-semibold text-ink">Masuk</RouterLink>
+      <RouterLink :to="{ name: 'login' }" class="font-semibold text-gray-900">Masuk</RouterLink>
     </p>
   </template>
 </template>

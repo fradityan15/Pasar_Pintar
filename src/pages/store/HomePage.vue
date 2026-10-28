@@ -63,7 +63,7 @@ onUnmounted(() => window.clearInterval(autoplay))
           Temukan makanan, kerajinan, dan oleh-oleh dari berbagai daerah. Kenali produk serta asal UMKM-nya sebelum memilih.
         </p>
         <div class="flex flex-wrap gap-3">
-          <RouterLink :to="{ name: 'katalog' }" class="btn-primary min-h-[48px] px-6">Belanja sekarang</RouterLink>
+          <RouterLink :to="{ name: 'katalog' }" class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md min-h-[48px] px-6">Belanja sekarang</RouterLink>
           <a href="#produk" class="btn-outline min-h-[48px] px-6">Lihat produk</a>
         </div>
       </div>
@@ -149,7 +149,7 @@ onUnmounted(() => window.clearInterval(autoplay))
           v-for="c in categories"
           :key="c.id"
           :to="{ name: 'katalog', query: { kategori: c.slug } }"
-          class="rounded-xl border border-line px-5 py-3 text-sm font-medium hover:bg-surface"
+          class="rounded-xl border border-gray-900 px-5 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50"
         >{{ c.name }}</RouterLink>
       </div>
     </section>
@@ -184,7 +184,7 @@ onUnmounted(() => window.clearInterval(autoplay))
         <h2 class="mt-2 max-w-xl text-2xl font-bold">Ada banyak cerita lokal untuk ditemukan.</h2>
         <p class="mt-2 max-w-xl text-sm leading-relaxed text-white/75">Jelajahi katalog dan temukan produk yang cocok untuk dinikmati atau dibagikan.</p>
       </div>
-      <RouterLink :to="{ name: 'katalog' }" class="btn min-h-[48px] shrink-0 bg-white px-6 font-semibold text-ink hover:bg-surface">
+      <RouterLink :to="{ name: 'katalog' }" class="btn min-h-[48px] shrink-0 bg-white px-6 font-semibold text-gray-900 hover:bg-gray-50">
         Jelajahi katalog
       </RouterLink>
     </section>

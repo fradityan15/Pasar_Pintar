@@ -70,7 +70,7 @@ onBeforeUnmount(() => window.clearInterval(countdownTimer))
 <template>
   <div class="min-h-screen bg-slate-50">
     <div class="mx-auto max-w-3xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
-      <RouterLink :to="{ name: 'pesanan' }" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-emerald-700">
+      <RouterLink :to="{ name: 'pesanan' }" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-gray-900">
         <span aria-hidden="true">←</span> Pesanan saya
       </RouterLink>
 
@@ -85,14 +85,14 @@ onBeforeUnmount(() => window.clearInterval(countdownTimer))
       <template v-else-if="order">
         <header class="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-7">
           <div class="flex items-start gap-4">
-            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
               <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                 <rect x="3" y="5" width="18" height="14" rx="2" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h3" />
               </svg>
             </span>
             <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium text-emerald-700">{{ isPaid ? 'Pembayaran terkonfirmasi' : isCod ? 'Pesanan berhasil dibuat' : 'Selesaikan pembayaran Anda' }}</p>
+              <p class="text-sm font-medium text-indigo-700">{{ isPaid ? 'Pembayaran terkonfirmasi' : isCod ? 'Pesanan berhasil dibuat' : 'Selesaikan pembayaran Anda' }}</p>
               <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 {{ isPaid ? 'Pembayaran Berhasil' : isCod ? 'Instruksi Pembayaran COD' : 'Menunggu Pembayaran' }}
               </h1>
@@ -103,7 +103,7 @@ onBeforeUnmount(() => window.clearInterval(countdownTimer))
           <div class="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-slate-100 pt-5">
             <div>
               <p class="text-sm text-slate-500">{{ isCod ? 'Total yang dibayarkan kepada kurir' : 'Total tagihan' }}</p>
-              <p class="mt-1 text-3xl font-bold tracking-tight text-slate-900">{{ formatRupiah(order.total) }}</p>
+              <p class="mt-1 text-3xl font-bold tracking-tight text-gray-900">{{ formatRupiah(order.total) }}</p>
             </div>
             <div v-if="!isCod && !isPaid" class="rounded-xl bg-amber-50 px-4 py-3 text-right">
               <p class="text-xs font-medium text-amber-800">Bayar sebelum</p>
@@ -131,7 +131,7 @@ onBeforeUnmount(() => window.clearInterval(countdownTimer))
             </div>
           </div>
 
-          <div v-if="isPaid" class="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900" role="status">
+          <div v-if="isPaid" class="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm leading-6 text-indigo-900" role="status">
             Pembayaran pesanan ini sudah dikonfirmasi. Pesanan sedang diteruskan untuk diproses.
           </div>
           <div v-else-if="isExpired" class="mt-5 rounded-xl border border-red-100 bg-red-50 p-4 text-sm leading-6 text-red-800" role="alert">
@@ -140,7 +140,7 @@ onBeforeUnmount(() => window.clearInterval(countdownTimer))
           <div v-else-if="isCod" class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-5">
             <p class="font-semibold text-slate-900">Bayar saat pesanan diterima</p>
             <p class="mt-2 text-sm leading-6 text-slate-600">
-              Siapkan pembayaran sebesar <span class="font-semibold text-slate-900">{{ formatRupiah(order.total) }}</span> untuk kurir saat barang tiba.
+              Siapkan pembayaran sebesar <span class="font-bold text-gray-900">{{ formatRupiah(order.total) }}</span> untuk kurir saat barang tiba.
             </p>
           </div>
           <div v-else-if="paymentMethod?.category === 'qris'" class="mt-5 flex flex-col items-center rounded-xl border border-slate-200 bg-slate-50 p-5 text-center">
@@ -179,17 +179,17 @@ onBeforeUnmount(() => window.clearInterval(countdownTimer))
           <p v-if="error && order" class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{{ error }}</p>
 
           <div class="mt-6 border-t border-slate-100 pt-5">
-            <RouterLink v-if="isPaid || isExpired" :to="{ name: 'pesanan-detail', params: { id: order.id } }" class="btn-primary w-full">
+            <RouterLink v-if="isPaid || isExpired" :to="{ name: 'pesanan-detail', params: { id: order.id } }" class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md w-full">
               Lihat detail pesanan
             </RouterLink>
             <RouterLink
               v-else-if="isWaitingForCod"
               :to="{ name: 'pesanan-detail', params: { id: order.id } }"
-              class="btn-primary w-full"
+              class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md w-full"
             >Lihat pesanan COD</RouterLink>
             <button
               v-else-if="order.status === 'menunggu_pembayaran'"
-              class="btn-primary w-full"
+              class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md w-full"
               type="button"
               :disabled="confirming || isExpired"
               @click="perbaruiStatusPembayaran"

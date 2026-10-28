@@ -82,19 +82,19 @@ async function addToCart(product) {
 
 <template>
   <div class="mx-auto max-w-7xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold">Katalog</h1>
+    <h1 class="text-3xl font-bold text-slate-900">Katalog</h1>
 
     <form class="mt-5 flex gap-3" role="search" @submit.prevent="setQuery({ q: search.trim(), page: 1 })">
       <label for="cari" class="sr-only">Cari produk</label>
       <input id="cari" v-model="search" class="input max-w-md" type="search" placeholder="Cari nama produk" />
-      <button class="btn-primary" type="submit">Cari</button>
+      <button class="btn min-h-[44px] rounded-xl bg-gray-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-black hover:shadow-md" type="submit">Cari</button>
     </form>
 
     <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filter kategori">
       <button
         type="button"
-        class="rounded-full border px-4 py-2 text-sm font-medium"
-        :class="!slug ? 'border-ink bg-ink text-white' : 'border-line hover:bg-surface'"
+        class="rounded-full border px-4 py-2 text-sm font-medium transition-colors"
+        :class="!slug ? 'border-gray-900 bg-gray-900 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'"
         :aria-pressed="!slug"
         @click="setQuery({ kategori: '', page: 1 })"
       >Semua</button>
@@ -102,8 +102,8 @@ async function addToCart(product) {
         v-for="c in parents"
         :key="c.id"
         type="button"
-        class="rounded-full border px-4 py-2 text-sm font-medium"
-        :class="slug === c.slug ? 'border-ink bg-ink text-white' : 'border-line hover:bg-surface'"
+        class="rounded-full border px-4 py-2 text-sm font-medium transition-colors"
+        :class="slug === c.slug ? 'border-gray-900 bg-gray-900 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'"
         :aria-pressed="slug === c.slug"
         @click="setQuery({ kategori: c.slug, page: 1 })"
       >{{ c.name }}</button>
@@ -149,7 +149,7 @@ async function addToCart(product) {
         <p
           v-if="toast"
           class="fixed right-4 top-4 z-50 max-w-sm rounded-xl border p-4 text-sm shadow-lg sm:right-6 sm:top-6"
-          :class="toastError ? 'border-red-200 bg-white text-red-800' : 'border-emerald-200 bg-white text-emerald-800'"
+          :class="toastError ? 'border-red-200 bg-white text-red-800' : 'border-indigo-200 bg-white text-indigo-800'"
           role="status"
           aria-live="polite"
         >{{ toast }}</p>

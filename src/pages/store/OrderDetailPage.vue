@@ -99,7 +99,7 @@ async function batalkan() {
 <template>
   <div class="min-h-screen bg-slate-50">
     <div class="mx-auto max-w-6xl px-4 pb-16 pt-6 md:px-6 lg:px-8">
-      <RouterLink :to="{ name: 'pesanan' }" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-emerald-700">← Semua pesanan</RouterLink>
+      <RouterLink :to="{ name: 'pesanan' }" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-gray-900">← Semua pesanan</RouterLink>
 
       <div v-if="loading" class="mt-6 h-64 animate-pulse rounded-2xl bg-white shadow-sm"></div>
       <p v-else-if="error && !order" class="mt-6 rounded-xl bg-bad-bg p-4 text-sm text-bad-fg" role="alert">{{ error }}</p>
@@ -120,36 +120,36 @@ async function batalkan() {
           </div>
           <div v-else class="relative mt-8 flex w-full items-center justify-between overflow-x-auto">
             <div class="pointer-events-none absolute left-[10%] right-[10%] top-4 h-1 rounded-full bg-slate-100" aria-hidden="true">
-              <div class="h-full rounded-full bg-emerald-600 transition-all duration-500" :style="{ width: progressWidth }"></div>
+              <div class="h-full rounded-full bg-indigo-600 transition-all duration-500" :style="{ width: progressWidth }"></div>
             </div>
             <ol class="relative flex min-w-[680px] flex-1 items-center justify-between">
               <li v-for="(step, index) in progressSteps" :key="step" class="flex w-32 shrink-0 flex-col items-center px-1 text-center">
                 <span
                   class="z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors"
-                  :class="index <= progressIndex ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-400'"
+                  :class="index <= progressIndex ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-200 bg-white text-slate-400'"
                 >
                   <svg v-if="index < progressIndex" viewBox="0 0 20 20" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.1 7.16a1 1 0 0 1-1.42.006l-3.9-3.84a1 1 0 0 1 1.404-1.426l3.19 3.14 6.4-6.448a1 1 0 0 1 1.42-.006Z" clip-rule="evenodd" /></svg>
                   <span v-else>{{ index + 1 }}</span>
                 </span>
-                <span class="mt-2 whitespace-nowrap text-[10px] font-medium leading-4 sm:text-xs" :class="index <= progressIndex ? 'text-emerald-800' : 'text-slate-400'">{{ step }}</span>
+                <span class="mt-2 whitespace-nowrap text-[10px] font-medium leading-4 sm:text-xs" :class="index <= progressIndex ? 'text-indigo-800' : 'text-slate-400'">{{ step }}</span>
               </li>
             </ol>
           </div>
         </section>
 
-        <div v-if="info && order.status === 'selesai'" class="mt-5 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-green-800" role="status">
+        <div v-if="info && order.status === 'selesai'" class="mt-5 flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-indigo-800" role="status">
           <svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="12" cy="12" r="9" />
             <path stroke-linecap="round" stroke-linejoin="round" d="m8 12 2.5 2.5L16 9" />
           </svg>
           <p class="text-sm font-medium">{{ info }}</p>
         </div>
-        <p v-else-if="info" class="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{{ info }}</p>
+        <p v-else-if="info" class="mt-4 rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-800" role="status">{{ info }}</p>
         <p v-if="error" class="mt-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700" role="alert">{{ error }}</p>
 
         <section v-if="menunggu" class="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-5">
           <div>
-            <p class="font-semibold text-amber-950">{{ order.payment_methods?.category === 'cod' || order.payment_method === 'cod' ? 'Pesanan COD' : 'Pesanan menunggu pembayaran' }} · {{ formatRupiah(order.total) }}</p>
+            <p class="font-bold text-gray-900">{{ order.payment_methods?.category === 'cod' || order.payment_method === 'cod' ? 'Pesanan COD' : 'Pesanan menunggu pembayaran' }} · {{ formatRupiah(order.total) }}</p>
             <p class="mt-1 text-sm text-amber-800">Metode yang dipilih: {{ order.payment_methods?.name || PAYMENT_METHOD[order.payment_method] || order.payment_method }}. {{ order.payment_methods?.category === 'cod' || order.payment_method === 'cod' ? 'Siapkan pembayaran tunai saat pesanan diterima.' : 'Pesanan akan diproses setelah pembayaran terkonfirmasi.' }}</p>
           </div>
         </section>
@@ -159,7 +159,7 @@ async function batalkan() {
         </section>
         <section v-if="bisaDibatalkan" class="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-red-100 bg-red-50 p-5">
           <p class="text-sm text-red-800">Pesanan masih menunggu pembayaran atau belum mulai diproses oleh toko.</p>
-          <button class="rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-800 transition hover:bg-red-100 disabled:opacity-50" type="button" :disabled="busy" @click="cancelOpen = true">Batalkan pesanan</button>
+          <button class="rounded-lg border border-gray-900 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50 disabled:opacity-50" type="button" :disabled="busy" @click="cancelOpen = true">Batalkan pesanan</button>
         </section>
 
         <div class="mt-6 grid grid-cols-1 items-start gap-6 md:grid-cols-3">
@@ -184,9 +184,9 @@ async function batalkan() {
                   </div>
                   <div class="min-w-0">
                     <p class="line-clamp-2 text-sm font-semibold text-slate-900 sm:text-base">{{ item.product_name }}</p>
-                    <p class="mt-1 text-sm text-slate-500">{{ item.quantity }} × {{ formatRupiah(item.unit_price) }}</p>
+                    <p class="mt-1 text-sm font-bold text-gray-900">{{ item.quantity }} × {{ formatRupiah(item.unit_price) }}</p>
                   </div>
-                  <p class="whitespace-nowrap text-right text-sm font-bold text-slate-900">{{ formatRupiah(item.unit_price * item.quantity) }}</p>
+                  <p class="whitespace-nowrap text-right text-sm font-bold text-gray-900">{{ formatRupiah(item.unit_price * item.quantity) }}</p>
                 </li>
               </ul>
             </section>
@@ -197,7 +197,7 @@ async function batalkan() {
           <aside class="flex flex-col gap-4 md:col-span-1">
             <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
               <div class="flex items-center gap-2.5">
-                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-700" aria-hidden="true">
+                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-700" aria-hidden="true">
                   <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" />
                   </svg>
@@ -209,10 +209,10 @@ async function batalkan() {
               <p class="mt-3 text-sm leading-6 text-slate-600">{{ addr.street }}, {{ addr.city }}, {{ addr.province }} {{ addr.postal_code }}</p>
             </section>
 
-            <section v-if="order.status === 'dikirim'" class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
-              <p class="text-sm font-semibold text-emerald-950">Paket sudah sampai?</p>
-              <p class="mt-1 text-xs leading-5 text-emerald-800">Konfirmasikan setelah Anda menerima seluruh barang dalam pesanan.</p>
-              <button class="mt-4 w-full rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-50" type="button" :disabled="busy" @click="konfirmasiDiterima">
+            <section v-if="order.status === 'dikirim'" class="rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
+              <p class="text-sm font-semibold text-indigo-950">Paket sudah sampai?</p>
+              <p class="mt-1 text-xs leading-5 text-indigo-800">Konfirmasikan setelah Anda menerima seluruh barang dalam pesanan.</p>
+              <button class="mt-4 w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50" type="button" :disabled="busy" @click="konfirmasiDiterima">
                 {{ busy ? 'Memproses...' : 'Konfirmasi Penerimaan Barang' }}
               </button>
             </section>
@@ -222,15 +222,15 @@ async function batalkan() {
               <dl class="mt-4 space-y-3 text-sm">
                 <div class="flex justify-between gap-3">
                   <dt class="text-slate-500">Subtotal produk</dt>
-                  <dd class="font-medium text-slate-800">{{ formatRupiah(order.subtotal) }}</dd>
+                  <dd class="font-bold text-gray-900">{{ formatRupiah(order.subtotal) }}</dd>
                 </div>
                 <div class="flex justify-between gap-3">
                   <dt class="text-slate-500">Ongkos kirim</dt>
-                  <dd class="font-medium text-slate-800">{{ formatRupiah(order.shipping_cost) }}</dd>
+                  <dd class="font-bold text-gray-900">{{ formatRupiah(order.shipping_cost) }}</dd>
                 </div>
                 <div class="flex justify-between gap-3 border-t border-slate-200 pt-4 text-base font-bold">
                   <dt class="text-slate-900">Total pembayaran</dt>
-                  <dd class="text-right text-emerald-800">{{ formatRupiah(order.total) }}</dd>
+                  <dd class="text-right font-bold text-gray-900">{{ formatRupiah(order.total) }}</dd>
                 </div>
               </dl>
               <p class="mt-4 border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">
@@ -238,10 +238,10 @@ async function batalkan() {
               </p>
             </section>
 
-            <section v-if="order.status === 'selesai'" class="rounded-xl border border-green-200 bg-green-50 p-5">
-              <p class="text-sm font-semibold text-green-900">Pesanan selesai</p>
-              <p class="mt-1 text-sm leading-5 text-green-800">Terima kasih telah mendukung mitra UMKM PasarPintar.</p>
-              <RouterLink :to="{ name: 'katalog' }" class="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-green-200 bg-white px-4 py-2.5 text-sm font-semibold text-green-800 transition hover:bg-green-100">Belanja lagi</RouterLink>
+            <section v-if="order.status === 'selesai'" class="rounded-xl border border-indigo-200 bg-indigo-50 p-5">
+              <p class="text-sm font-semibold text-indigo-900">Pesanan selesai</p>
+              <p class="mt-1 text-sm leading-5 text-indigo-800">Terima kasih telah mendukung mitra UMKM PasarPintar.</p>
+              <RouterLink :to="{ name: 'katalog' }" class="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-gray-900 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50">Belanja lagi</RouterLink>
             </section>
           </aside>
         </div>
@@ -256,7 +256,7 @@ async function batalkan() {
         </p>
         <div class="flex justify-end gap-2">
           <button class="btn-outline" type="button" :disabled="busy" @click="cancelOpen = false">Kembali</button>
-          <button class="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-50" type="button" :disabled="busy" @click="batalkan">
+          <button class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-50" type="button" :disabled="busy" @click="batalkan">
             {{ busy ? 'Membatalkan…' : 'Ya, batalkan' }}
           </button>
         </div>

@@ -86,7 +86,7 @@ const unduh = () =>
         <p v-if="!top.length" class="mt-3 text-sm text-muted">Belum ada penjualan pada rentang ini.</p>
         <ol v-else class="mt-3 flex flex-col gap-2 text-sm">
           <li v-for="(p, i) in top" :key="p.name" class="flex justify-between gap-3">
-            <span>{{ i + 1 }}. {{ p.name }}</span><span class="text-muted">{{ p.qty }} terjual · {{ formatRupiah(p.revenue) }}</span>
+            <span>{{ i + 1 }}. {{ p.name }}</span><span class="text-muted">{{ p.qty }} terjual · <strong class="font-bold text-gray-900">{{ formatRupiah(p.revenue) }}</strong></span>
           </li>
         </ol>
       </section>
@@ -98,7 +98,7 @@ const unduh = () =>
             <thead class="text-xs text-muted"><tr><th class="py-2 font-medium">Tanggal</th><th class="py-2 font-medium">Pesanan</th><th class="py-2 text-right font-medium">Omzet</th></tr></thead>
             <tbody>
               <tr v-for="r in [...rows].reverse()" :key="r.tanggal" class="border-t border-line">
-                <td class="py-2">{{ r.tanggal }}</td><td class="py-2">{{ r.jumlah_pesanan }}</td><td class="py-2 text-right">{{ formatRupiah(r.omzet) }}</td>
+                <td class="py-2">{{ r.tanggal }}</td><td class="py-2">{{ r.jumlah_pesanan }}</td><td class="py-2 text-right font-bold text-gray-900">{{ formatRupiah(r.omzet) }}</td>
               </tr>
             </tbody>
           </table>

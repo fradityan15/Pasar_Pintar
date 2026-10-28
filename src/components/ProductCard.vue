@@ -18,21 +18,21 @@ const origin = computed(() =>
 </script>
 
 <template>
-  <article class="relative flex flex-col gap-1 text-sm">
-    <RouterLink :to="{ name: 'produk', params: { slug: product.slug } }" class="flex flex-col gap-1 hover:opacity-80">
-      <div class="mb-2 aspect-square overflow-hidden rounded-[14px] bg-[#EDEDF0]">
+  <article class="group relative flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 text-sm shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+    <RouterLink :to="{ name: 'produk', params: { slug: product.slug } }" class="flex flex-col gap-2">
+      <div class="mb-1 aspect-square overflow-hidden rounded-xl bg-slate-100">
         <img v-if="image" :src="image" :alt="product.name" loading="lazy" class="h-full w-full object-cover" />
-        <div v-else class="flex h-full items-center justify-center text-xs text-[#4B5563]">Foto produk</div>
+        <div v-else class="flex h-full items-center justify-center text-xs text-slate-500">Foto produk</div>
       </div>
-      <h3 class="font-semibold">{{ product.name }}</h3>
-      <p class="text-xs text-muted">{{ origin }}</p>
-      <p class="flex items-center gap-2 font-semibold">
+      <h3 class="line-clamp-2 font-semibold text-slate-800">{{ product.name }}</h3>
+      <p class="text-xs text-slate-500">{{ origin }}</p>
+      <p class="flex flex-wrap items-center gap-2 text-lg font-bold text-gray-900">
         {{ formatRupiah(product.price) }}
         <span v-if="product.stock === 0" class="badge bg-bad-bg text-bad-fg">Habis</span>
       </p>
     </RouterLink>
     <button
-      class="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white text-emerald-800 shadow-md transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+      class="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm transition-colors hover:bg-indigo-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
       type="button"
       :disabled="adding || product.stock < 1"
       :aria-label="`Tambah ${product.name} ke keranjang`"

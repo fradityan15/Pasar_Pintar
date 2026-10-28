@@ -208,7 +208,7 @@ function duplikatProduk(product) {
               <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Produk Saya</h1>
               <p class="mt-1.5 text-sm text-slate-500">Kelola katalog, harga, dan stok produk {{ umkm?.name || 'toko Anda' }}.</p>
             </div>
-            <RouterLink :to="{ name: 'umkm-dashboard' }" class="text-sm font-semibold text-emerald-700 hover:text-emerald-800">Lihat ringkasan →</RouterLink>
+            <RouterLink :to="{ name: 'umkm-dashboard' }" class="text-sm font-semibold text-gray-900 hover:text-gray-900">Lihat ringkasan →</RouterLink>
           </div>
           <p v-if="notice" class="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{{ notice }}</p>
           <p v-if="error" class="mt-5 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700" role="alert">
@@ -220,7 +220,7 @@ function duplikatProduk(product) {
           </div>
           <div v-else-if="!umkm" class="mt-6 rounded-xl border border-slate-200 bg-white p-6">
             <p class="font-semibold text-slate-900">Data UMKM tidak ditemukan.</p>
-            <RouterLink :to="{ name: 'akun' }" class="mt-2 inline-block text-sm font-semibold text-emerald-700 underline">Periksa pendaftaran di halaman akun</RouterLink>
+            <RouterLink :to="{ name: 'akun' }" class="mt-2 inline-block text-sm font-semibold text-gray-900 underline">Periksa pendaftaran di halaman akun</RouterLink>
           </div>
           <div v-else-if="umkm.status !== 'active' || !umkm.is_active" class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900" role="status">
             Pengelolaan produk tersedia setelah Admin PasarPintar menyetujui dan mengaktifkan toko.
@@ -237,17 +237,17 @@ function duplikatProduk(product) {
                 <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <circle cx="11" cy="11" r="7" /><path stroke-linecap="round" d="m16 16 4 4" />
                 </svg>
-                <input v-model="search" class="min-h-11 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100" type="search" placeholder="Cari nama produk..." />
+                <input v-model="search" class="min-h-11 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-200" type="search" placeholder="Cari nama produk..." />
               </label>
               <label class="block">
                 <span class="sr-only">Filter produk</span>
-                <select v-model="stockFilter" class="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100">
+                <select v-model="stockFilter" class="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-200">
                   <option value="all">Semua produk</option>
                   <option value="active">Aktif</option>
                   <option value="out">Habis</option>
                 </select>
               </label>
-              <button class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2" type="button" @click="bukaForm()">
+              <button class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white transition hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2" type="button" @click="bukaForm()">
                 <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path stroke-linecap="round" d="M12 5v14M5 12h14" />
                 </svg>
@@ -257,7 +257,7 @@ function duplikatProduk(product) {
           </div>
 
           <div v-if="filteredProducts.length" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <article v-for="product in filteredProducts" :key="product.id" class="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg">
+            <article v-for="product in filteredProducts" :key="product.id" class="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-gray-900 hover:shadow-lg">
               <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
                 <img v-if="product.product_images?.[0]?.url" :src="product.product_images[0].url" :alt="product.name" class="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                 <div v-else class="flex h-full items-center justify-center text-slate-400">
@@ -270,11 +270,11 @@ function duplikatProduk(product) {
                 <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ product.categories?.name || 'Tanpa kategori' }}</p>
                 <h3 class="mt-1 truncate text-lg font-bold text-slate-900">{{ product.name }}</h3>
                 <p class="mt-1 min-h-10 line-clamp-2 text-sm text-slate-500">{{ product.description || 'Tanpa deskripsi' }}</p>
-                <p class="mt-3 text-lg font-bold text-emerald-700">{{ formatRupiah(product.price) }}</p>
+                <p class="mt-3 text-lg font-bold text-gray-900">{{ formatRupiah(product.price) }}</p>
                 <div class="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                  <button class="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100" type="button" @click="bukaForm(product)">Ubah</button>
-                  <button class="rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800 transition hover:bg-blue-100" type="button" @click="duplikatProduk(product)">Duplikat</button>
-                  <button class="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100" type="button" @click="hapusProduk(product)">Hapus</button>
+                  <button class="rounded-lg border border-gray-900 bg-white px-3 py-2 text-xs font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="bukaForm(product)">Ubah</button>
+                  <button class="rounded-lg border border-gray-900 bg-white px-3 py-2 text-xs font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="duplikatProduk(product)">Duplikat</button>
+                  <button class="rounded-lg border border-gray-900 bg-white px-3 py-2 text-xs font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="hapusProduk(product)">Hapus</button>
                 </div>
               </div>
             </article>
@@ -288,7 +288,7 @@ function duplikatProduk(product) {
             </div>
             <h3 class="mt-3 text-sm font-semibold text-slate-900">Belum ada produk</h3>
             <p class="mt-1 text-sm text-slate-500">Tambahkan produk pertama untuk mulai mengisi katalog toko.</p>
-            <button class="mt-4 text-sm font-semibold text-emerald-700 hover:text-emerald-800" type="button" @click="bukaForm()">Tambah produk pertama</button>
+            <button class="mt-4 text-sm font-semibold text-gray-900 hover:text-gray-900" type="button" @click="bukaForm()">Tambah produk pertama</button>
           </div>
           </section>
         </section>
@@ -338,7 +338,7 @@ function duplikatProduk(product) {
             <div class="md:col-span-2">
               <h3 class="text-sm font-medium text-slate-700">Foto produk</h3>
               <p class="mt-1 text-xs text-slate-500">JPG, PNG, atau WebP · Maksimal 2 MB per foto</p>
-              <label for="seller-product-photo" class="mt-3 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center transition hover:border-emerald-500 hover:bg-emerald-50/50" @dragover.prevent @drop.prevent="dropFoto">
+              <label for="seller-product-photo" class="mt-3 flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center transition hover:border-gray-300 hover:bg-gray-50/50" @dragover.prevent @drop.prevent="dropFoto">
                 <svg viewBox="0 0 24 24" class="h-9 w-9 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" />
                 </svg>
@@ -353,14 +353,14 @@ function duplikatProduk(product) {
                 </div>
                 <div v-for="image in savedImages" :key="image.id" class="relative">
                   <img :src="image.url" alt="Foto produk tersimpan" class="aspect-square w-full rounded-xl object-cover" />
-                  <button type="button" class="absolute right-2 top-2 rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-red-600 shadow" @click="hapusFotoTersimpan(image)">Hapus foto</button>
+                  <button type="button" class="absolute right-2 top-2 rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-gray-900 shadow" @click="hapusFotoTersimpan(image)">Hapus foto</button>
                 </div>
               </div>
             </div>
             <label class="flex items-center gap-2 text-sm text-slate-700 md:col-span-2"><input v-model="form.is_active" type="checkbox" /> Tampilkan di katalog</label>
             <p v-if="formError" class="rounded-xl bg-red-50 p-3 text-sm text-red-700 md:col-span-2" role="alert">{{ formError }}</p>
             <div class="flex gap-2 md:col-span-2">
-              <button class="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50" type="submit" :disabled="saving">{{ saving ? 'Menyimpan…' : 'Simpan produk' }}</button>
+              <button class="inline-flex min-h-11 items-center justify-center rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white hover:bg-black disabled:opacity-50" type="submit" :disabled="saving">{{ saving ? 'Menyimpan…' : 'Simpan produk' }}</button>
               <button class="btn-outline" type="button" :disabled="saving" @click="batalProduk">Batal</button>
             </div>
           </form>
