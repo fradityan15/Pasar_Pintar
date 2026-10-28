@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { getMyUmkm } from '@/services/umkmPartnerService'
 
 const StoreLayout = () => import('@/layouts/StoreLayout.vue')
 const AuthLayout = () => import('@/layouts/AuthLayout.vue')
@@ -15,10 +16,10 @@ const routes = [
       { path: 'akun', name: 'akun', component: () => import('@/pages/store/AccountPage.vue'), meta: { title: 'Akun saya', requiresAuth: true } },
       { path: 'umkm', name: 'umkm', component: () => import('@/pages/store/UmkmListPage.vue'), meta: { title: 'UMKM mitra' } },
       { path: 'umkm/:slug', name: 'umkm-detail', component: () => import('@/pages/store/UmkmDetailPage.vue'), meta: { title: 'Profil UMKM' } },
-      { path: 'mitra', name: 'umkm-dashboard', component: () => import('@/pages/store/UmkmDashboardPage.vue'), meta: { title: 'Ringkasan Toko', requiresAuth: true } },
-      { path: 'mitra/produk', name: 'umkm-products', component: () => import('@/pages/store/UmkmProductsPage.vue'), meta: { title: 'Dasbor UMKM', requiresAuth: true } },
-      { path: 'mitra/pesanan', name: 'umkm-orders', component: () => import('@/pages/store/UmkmOrdersPage.vue'), meta: { title: 'Pesanan masuk', requiresAuth: true } },
-      { path: 'mitra/pengaturan', name: 'umkm-settings', component: () => import('@/pages/store/UmkmSettingsPage.vue'), meta: { title: 'Pengaturan Toko', requiresAuth: true } },
+      { path: 'mitra', name: 'umkm-dashboard', component: () => import('@/pages/store/UmkmDashboardPage.vue'), meta: { title: 'Ringkasan Toko', requiresAuth: true, requiresSeller: true } },
+      { path: 'mitra/produk', name: 'umkm-products', component: () => import('@/pages/store/UmkmProductsPage.vue'), meta: { title: 'Dasbor UMKM', requiresAuth: true, requiresSeller: true } },
+      { path: 'mitra/pesanan', name: 'umkm-orders', component: () => import('@/pages/store/UmkmOrdersPage.vue'), meta: { title: 'Pesanan masuk', requiresAuth: true, requiresSeller: true } },
+      { path: 'mitra/pengaturan', name: 'umkm-settings', component: () => import('@/pages/store/UmkmSettingsPage.vue'), meta: { title: 'Pengaturan Toko', requiresAuth: true, requiresSeller: true } },
       { path: 'produk/:slug', name: 'produk', component: () => import('@/pages/store/ProductDetailPage.vue'), meta: { title: 'Detail produk' } },
       { path: 'keranjang', alias: '/cart', name: 'keranjang', component: () => import('@/pages/store/CartPage.vue'), meta: { title: 'Keranjang' } },
       { path: 'checkout', name: 'checkout', component: () => import('@/pages/store/CheckoutPage.vue'), meta: { title: 'Checkout', requiresAuth: true } },
@@ -84,10 +85,17 @@ router.beforeEach(async (to) => {
   await auth.init()
 
   if (to.meta.public) return
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
+    return { name: 'home', query: { accessDenied: '1' } }
+  }
+  if (to.meta.requiresSeller) {
+    if (!auth.isLoggedIn || !(await getMyUmkm())) {
+      return { name: 'home', query: { accessDenied: '1' } }
+    }
+  }
   if (to.meta.requiresAuth && !auth.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  if (to.meta.requiresAdmin && !auth.isAdmin) return { name: 'home' }
   if (to.meta.guestOnly && auth.isLoggedIn) {
     return { name: auth.isAdmin ? 'admin-dashboard' : 'home' }
   }

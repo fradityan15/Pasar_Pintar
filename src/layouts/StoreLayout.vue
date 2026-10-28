@@ -102,6 +102,12 @@ async function keluar() {
   router.push({ name: 'home' })
 }
 
+function dismissAccessNotice() {
+  const query = { ...route.query }
+  delete query.accessDenied
+  router.replace({ query })
+}
+
 function cari() {
   const q = search.value.trim()
   router.push({ name: 'katalog', query: q ? { q } : {} })
@@ -417,7 +423,13 @@ function persistReadItems(items, storageKey) {
     </header>
     </div>
 
-    <main class="flex-1"><RouterView /></main>
+    <main class="flex-1">
+      <div v-if="route.query.accessDenied === '1'" class="mx-auto mt-4 flex max-w-7xl items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+        <p>Akses ditolak. Anda tidak memiliki hak untuk membuka halaman tersebut.</p>
+        <button type="button" class="shrink-0 font-semibold underline" @click="dismissAccessNotice">Tutup</button>
+      </div>
+      <RouterView />
+    </main>
 
     <footer class="bg-ink text-[#C9CBD1]">
       <div class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 sm:px-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">

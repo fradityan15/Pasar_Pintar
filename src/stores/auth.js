@@ -54,6 +54,10 @@ export const useAuthStore = defineStore('auth', () => {
       options: { data: { full_name: fullName } },
     })
     if (error) throw new Error(terjemah(error.message))
+    // Supabase may hide the duplicate-email error when email confirmation is enabled.
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      throw new Error(terjemah('User already registered'))
+    }
     // Jika "Confirm email" aktif di Supabase, session kosong sampai email diverifikasi.
     user.value = data.session?.user ?? null
     await loadProfile()
@@ -71,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
 
 function terjemah(msg) {
   if (/invalid login/i.test(msg)) return 'Email atau kata sandi salah.'
-  if (/already registered/i.test(msg)) return 'Email ini sudah terdaftar. Silakan masuk.'
+  if (/already registered|already exists/i.test(msg)) return 'Email ini sudah terdaftar. Silakan gunakan email lain atau langsung Masuk.'
   if (/password should be at least/i.test(msg)) return 'Kata sandi minimal 6 karakter.'
   if (/email not confirmed/i.test(msg)) return 'Email belum diverifikasi. Cek kotak masuk Anda.'
   return msg
