@@ -11,3 +11,9 @@ export async function getAdminDashboardCharts() {
   if (error) throw new Error(error.message)
   return data
 }
+
+export async function getAdminGlobalAnalytics() {
+  const { data, error } = await supabase.rpc('admin_global_analytics')
+  if (error) throw new Error(error.message)
+  return data
+}

@@ -73,6 +73,7 @@ Vercel → Project → **Settings → Domains** → tambah domain, lalu ikuti pe
 | Setelah login diarahkan ke `localhost` | Site URL Supabase belum diganti | Ulangi langkah 3 |
 | Foto tidak tampil | Bucket tidak publik atau URL salah | Cek bucket `product-images` publik di Storage |
 | "permission denied" / data kosong | RLS memblokir | Cek apakah akun sudah login dan perannya benar |
+| Checkout menampilkan `orders_payment_method_check` | Migrasi checkout UUID belum diterapkan di database production | Jalankan migrasi `024` sampai `026` secara berurutan di Supabase SQL Editor; jalankan `025` terpisah dan tunggu selesai sebelum `026`, lalu deploy ulang frontend |
 
 ## Alternatif: Netlify
 New site from Git → pilih repo → Build command `npm run build`, Publish directory `dist` → isi dua environment variable yang sama → Deploy. File `public/_redirects` sudah menangani refresh rute.

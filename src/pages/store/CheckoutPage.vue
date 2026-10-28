@@ -115,8 +115,9 @@ async function buatPesanan() {
   placing.value = true
   error.value = ''
   try {
-    if (!selectedPaymentMethodId.value) throw new Error('Pilih metode pembayaran terlebih dahulu')
-    const orderId = await createOrder(selected.value, selectedPaymentMethodId.value, selectedProductIds.value, shippingMethod.value)
+    const paymentMethodId = selectedPaymentMethod.value?.id
+    if (!paymentMethodId) throw new Error('Pilih metode pembayaran terlebih dahulu')
+    const orderId = await createOrder(selected.value, paymentMethodId, selectedProductIds.value, shippingMethod.value)
     const selectedIds = new Set(selectedProductIds.value)
     cart.items = cart.items.filter((item) => !selectedIds.has(item.product_id))
     await router.push({ name: 'payment-simulation', params: { orderId } })

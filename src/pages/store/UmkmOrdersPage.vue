@@ -113,7 +113,9 @@ async function ubahStatus(order, action, successMessage) {
                   <td class="whitespace-nowrap px-5 py-4 font-medium text-slate-900">{{ formatRupiah(order.total) }}</td>
                   <td class="whitespace-nowrap px-5 py-4">
                     <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="ORDER_STATUS[order.status]?.cls || 'bg-slate-100 text-slate-700'">
-                      {{ order.seller_shipping_status === 'menunggu_diproses' ? 'Siap diproses' : (ORDER_STATUS[order.status]?.label || order.status) }}
+                      {{ order.status === 'menunggu_pembayaran'
+                        ? ORDER_STATUS[order.status]?.label
+                        : (order.seller_shipping_status === 'menunggu_diproses' ? 'Siap diproses' : (ORDER_STATUS[order.status]?.label || order.status)) }}
                     </span>
                   </td>
                   <td class="whitespace-nowrap px-5 py-4 text-slate-500">{{ formatTanggalJam(order.created_at) }}</td>
@@ -122,7 +124,12 @@ async function ubahStatus(order, action, successMessage) {
                       <button class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" type="button" @click="expandedOrderId = expandedOrderId === order.order_id ? null : order.order_id">
                         {{ expandedOrderId === order.order_id ? 'Tutup riwayat' : 'Riwayat' }}
                       </button>
-                      <div v-if="order.seller_shipping_status === 'menunggu_diproses' || order.seller_shipping_status === 'diproses'" class="flex gap-2">
+                      <div
+                        v-if="(order.payment_status === 'dibayar' || order.payment_category === 'cod')
+                          && ['menunggu_diproses', 'diproses'].includes(order.status)
+                          && (order.seller_shipping_status === 'menunggu_diproses' || order.seller_shipping_status === 'diproses')"
+                        class="flex gap-2"
+                      >
                         <button
                           v-if="order.seller_shipping_status === 'menunggu_diproses'"
                           class="rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-800 disabled:cursor-wait disabled:opacity-60"

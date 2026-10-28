@@ -48,7 +48,7 @@ function sudahDiulas(productId) {
 
 function bisaDibatalkan(order) {
   return order.status === 'menunggu_pembayaran'
-    || (order.status === 'diproses'
+    || (['menunggu_diproses', 'diproses'].includes(order.status)
       && order.order_items.length > 0
       && order.order_items.every((item) => item.seller_shipping_status === 'menunggu_diproses'))
 }

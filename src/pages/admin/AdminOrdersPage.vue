@@ -7,7 +7,7 @@ import AdminPageHeader from '@/components/AdminPageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useQueryState } from '@/composables/useQueryState'
-import { expireUnpaidOrders, listOrders } from '@/services/adminOrderService'
+import { listOrders } from '@/services/adminOrderService'
 import { listUmkmAdmin } from '@/services/adminCatalogService'
 import { getAdminDashboardCharts } from '@/services/adminService'
 import { formatRupiah, formatTanggalJam } from '@/lib/format'
@@ -22,7 +22,6 @@ const umkmOptions = ref([])
 const total = ref(0)
 const loading = ref(true)
 const error = ref('')
-const notice = ref('')
 const search = ref(str('q'))
 const selectedUmkm = ref(str('umkm'))
 const selectedMonth = ref(str('month') || todayJakarta().slice(0, 7))
@@ -129,21 +128,10 @@ function ubahFilter(key, value) {
   set({ [key]: value, page: 1 })
 }
 
-async function bersihkan() {
-  if (!confirm('Batalkan semua pesanan yang melewati batas pembayaran dan kembalikan stoknya?')) return
-  try {
-    const n = await expireUnpaidOrders()
-    notice.value = `${n} pesanan kedaluwarsa dibatalkan.`
-    load()
-  } catch (e) {
-    error.value = e.message
-  }
-}
 </script>
 
 <template>
   <AdminPageHeader title="Pesanan" desc="Pantau dan awasi seluruh aktivitas transaksi dari semua Mitra UMKM.">
-    <button class="btn-outline" type="button" @click="bersihkan">Batalkan pesanan kedaluwarsa</button>
   </AdminPageHeader>
 
   <section class="mb-6 rounded-xl bg-white p-5 shadow-sm ring-1 ring-line" aria-labelledby="daily-orders-title">
@@ -185,7 +173,6 @@ async function bersihkan() {
       <button class="btn-primary" type="submit">Cari</button>
     </form>
 
-    <p v-if="notice" class="mb-3 rounded-xl bg-ok-bg p-3 text-sm text-ok-fg" role="status">{{ notice }}</p>
     <p v-if="error" class="rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">
       {{ error }} <button class="ml-2 font-semibold underline" type="button" @click="load">Coba lagi</button>
     </p>

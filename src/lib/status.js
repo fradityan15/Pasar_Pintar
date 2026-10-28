@@ -1,5 +1,6 @@
 export const ORDER_STATUS = {
   menunggu_pembayaran: { label: 'Menunggu pembayaran', cls: 'bg-warn-bg text-warn-fg' },
+  menunggu_diproses: { label: 'Menunggu diproses', cls: 'bg-info-bg text-info-fg' },
   diproses: { label: 'Diproses', cls: 'bg-info-bg text-info-fg' },
   dikirim: { label: 'Dikirim', cls: 'bg-info-bg text-info-fg' },
   selesai: { label: 'Selesai', cls: 'bg-ok-bg text-ok-fg' },

@@ -18,7 +18,8 @@ const loading = ref(true)
 const error = ref('')
 const canManage = computed(() => umkm.value?.status === 'active' && umkm.value.is_active)
 const recentOrders = computed(() => orders.value
-  .filter((order) => order.seller_shipping_status === 'menunggu_diproses')
+  .filter((order) => order.seller_shipping_status === 'menunggu_diproses'
+    && (order.payment_status === 'dibayar' || order.payment_category === 'cod'))
   .slice(0, 5))
 const totalIncome = computed(() => Number(metrics.value?.total_pendapatan ?? 0))
 const pendingOrders = computed(() => Number(metrics.value?.pesanan_baru ?? 0))
@@ -56,10 +57,10 @@ const salesChartData = computed(() => {
         label: 'Pendapatan',
         data: revenue.map((item) => Number(item.omzet)),
         yAxisID: 'revenue',
-        borderColor: '#047857',
+        borderColor: '#059669',
         backgroundColor: 'rgba(16, 185, 129, 0.12)',
-        pointBackgroundColor: '#047857',
-        pointBorderColor: '#ffffff',
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: '#059669',
         pointBorderWidth: 2,
         pointRadius: 4,
         borderWidth: 3,
@@ -70,8 +71,8 @@ const salesChartData = computed(() => {
         label: 'Unit terjual',
         data: sales.map((item) => Number(item.jumlah)),
         yAxisID: 'units',
-        borderColor: '#0ea5e9',
-        pointBackgroundColor: '#0ea5e9',
+        borderColor: '#047857',
+        pointBackgroundColor: '#047857',
         pointRadius: 4,
         borderWidth: 2,
         tension: 0.35,

@@ -51,6 +51,7 @@ function statusColor(status) {
   if (status === 'selesai') return 'bg-emerald-600 ring-emerald-100'
   if (status === 'dibatalkan') return 'bg-red-600 ring-red-100'
   if (status === 'menunggu_pembayaran') return 'bg-amber-500 ring-amber-100'
+  if (status === 'menunggu_diproses') return 'bg-sky-500 ring-sky-100'
   return 'bg-teal-600 ring-teal-100'
 }
 </script>

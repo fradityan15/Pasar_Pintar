@@ -4,7 +4,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import OrderTracking from '@/components/OrderTracking.vue'
 import ModalDialog from '@/components/ModalDialog.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { cancelOrderAdmin, confirmOrderPaymentAdmin, getOrderAdmin, setOrderStatus } from '@/services/adminOrderService'
+import { confirmOrderPaymentAdmin, getOrderAdmin } from '@/services/adminOrderService'
 import { formatRupiah } from '@/lib/format'
 import { PAYMENT_METHOD } from '@/lib/status'
 
@@ -14,9 +14,6 @@ const loading = ref(true)
 const error = ref('')
 const info = ref('')
 const busy = ref(false)
-const note = ref('')
-const cancelOpen = ref(false)
-const reason = ref('')
 const paymentConfirmOpen = ref(false)
 const paymentReference = ref('')
 
@@ -39,7 +36,6 @@ async function run(fn, pesan) {
   try {
     await fn()
     info.value = pesan
-    note.value = ''
     order.value = await getOrderAdmin(route.params.id)
     return true
   } catch (e) {
@@ -49,8 +45,6 @@ async function run(fn, pesan) {
     busy.value = false
   }
 }
-const kirim = () => run(() => setOrderStatus(order.value.id, 'dikirim', note.value.trim() || null), 'Status diubah menjadi Dikirim.')
-const selesai = () => run(() => setOrderStatus(order.value.id, 'selesai', note.value.trim() || null), 'Pesanan ditandai Selesai.')
 async function konfirmasiPembayaran() {
   const success = await run(
     () => confirmOrderPaymentAdmin(order.value.id, paymentReference.value.trim() || null),
@@ -59,12 +53,6 @@ async function konfirmasiPembayaran() {
   if (!success) return
   paymentConfirmOpen.value = false
   paymentReference.value = ''
-}
-async function batalkan() {
-  const success = await run(() => cancelOrderAdmin(order.value.id, reason.value.trim()), 'Pesanan dibatalkan dan stok dikembalikan.')
-  if (!success) return
-  cancelOpen.value = false
-  reason.value = ''
 }
 </script>
 
@@ -83,16 +71,10 @@ async function batalkan() {
     <p v-if="info" class="mt-3 rounded-xl bg-ok-bg p-3 text-sm text-ok-fg" role="status">{{ info }}</p>
     <p v-if="error" class="mt-3 rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">{{ error }}</p>
 
-    <section v-if="['menunggu_pembayaran', 'diproses', 'dikirim'].includes(status)" class="card mt-4 flex flex-wrap items-end gap-3 p-5">
-      <div v-if="status !== 'menunggu_pembayaran'" class="min-w-[220px] flex-1">
-        <label for="catatan" class="mb-1.5 block text-sm font-medium">Catatan (opsional)</label>
-        <input id="catatan" v-model="note" class="input" placeholder="Mis. nomor resi" />
-      </div>
-      <button v-if="status === 'diproses'" class="btn-primary" type="button" :disabled="busy" @click="kirim">Tandai dikirim</button>
-      <button v-if="status === 'dikirim'" class="btn-primary" type="button" :disabled="busy" @click="selesai">Tandai selesai</button>
-      <button v-if="['menunggu_pembayaran', 'diproses'].includes(status)" class="btn border border-bad-fg text-bad-fg" type="button" :disabled="busy" @click="cancelOpen = true">Batalkan pesanan</button>
+    <section v-if="status === 'menunggu_pembayaran'" class="card mt-4 flex flex-wrap items-center justify-between gap-3 p-5">
+      <p class="text-sm text-muted">Admin hanya memverifikasi pembayaran. Status proses dan pengiriman dikelola oleh penjual.</p>
       <button
-        v-if="status === 'menunggu_pembayaran' && order.payment_status !== 'dibayar' && order.payment_methods?.category !== 'cod' && order.payment_method !== 'cod'"
+        v-if="order.payment_status !== 'dibayar' && order.payment_methods?.category !== 'cod' && order.payment_method !== 'cod'"
         class="btn-primary"
         type="button"
         :disabled="busy"
@@ -128,20 +110,6 @@ async function batalkan() {
         <OrderTracking :order-id="order.id" user-role="admin" />
       </div>
     </div>
-
-    <ModalDialog :open="cancelOpen" title="Batalkan pesanan" @close="cancelOpen = false">
-      <form class="flex flex-col gap-3" @submit.prevent="batalkan">
-        <p class="text-sm text-muted">Stok barang akan dikembalikan. Alasan akan tercatat di riwayat.</p>
-        <div>
-          <label for="alasan" class="mb-1.5 block text-sm font-medium">Alasan pembatalan</label>
-          <textarea id="alasan" v-model="reason" class="input py-2" rows="3" minlength="5" required></textarea>
-        </div>
-        <div class="flex justify-end gap-2">
-          <button class="btn-outline" type="button" @click="cancelOpen = false">Kembali</button>
-          <button class="btn bg-bad-fg text-white" type="submit" :disabled="busy">Batalkan pesanan</button>
-        </div>
-      </form>
-    </ModalDialog>
 
     <ModalDialog :open="paymentConfirmOpen" title="Verifikasi pembayaran" @close="paymentConfirmOpen = false">
       <form class="flex flex-col gap-3" @submit.prevent="konfirmasiPembayaran">

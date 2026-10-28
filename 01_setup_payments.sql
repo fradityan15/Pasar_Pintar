@@ -30,7 +30,9 @@ create policy "Active payment methods are publicly readable"
 grant select on public.payment_methods to anon, authenticated;
 
 alter table public.orders
-  add column if not exists payment_method_id uuid;
+  add column if not exists payment_method_id uuid,
+  drop constraint if exists orders_payment_method_check,
+  alter column payment_method drop not null;
 
 do $$
 begin
@@ -58,24 +60,6 @@ alter table public.orders
 alter table public.orders
   add constraint orders_shipping_method_check
   check (shipping_method in ('regular', 'economy'));
-
-alter table public.orders
-  drop constraint if exists orders_payment_method_check;
-
-alter table public.orders
-  add constraint orders_payment_method_check
-  check (
-    payment_method in (
-      'qris',
-      'virtual_account',
-      'bank_transfer',
-      'cod',
-      'va-bca',
-      'va-mandiri',
-      'va-bri',
-      'va-bni'
-    )
-  );
 
 alter table public.orders
   alter column payment_status drop default;
@@ -118,7 +102,6 @@ declare
   v_item_count    bigint := 0;
   v_subtotal      numeric := 0;
   v_shipping      numeric;
-  v_payment_type  text;
   r               record;
 begin
   if v_uid is null then
@@ -135,12 +118,6 @@ begin
   if not found then
     raise exception 'Metode pembayaran tidak ditemukan atau tidak aktif';
   end if;
-
-  v_payment_type := case
-    when v_payment.category = 'qris' then 'qris'
-    when v_payment.category in ('va', 'bank_transfer') then 'virtual_account'
-    else 'cod'
-  end;
 
   v_shipping := case p_shipping_method
     when 'regular' then 15000
@@ -215,7 +192,6 @@ begin
 
   insert into public.orders (
     user_id,
-    payment_method,
     payment_method_id,
     shipping_method,
     subtotal,
@@ -226,7 +202,6 @@ begin
   )
   values (
     v_uid,
-    v_payment_type,
     v_payment.id,
     p_shipping_method,
     v_subtotal,
