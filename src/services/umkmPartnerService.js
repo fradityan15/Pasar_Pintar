@@ -1,14 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { slugify } from '@/lib/slug'
 
-function take({ data, error }) {
-  if (error) {
-    if (error.code === '23505') throw new Error('Akun ini sudah memiliki pendaftaran UMKM, atau nama UMKM sudah digunakan.')
-    throw new Error(error.message)
-  }
-  return data
-}
-
 export async function getMyUmkm() {
   const { data, error } = await supabase.rpc('get_my_umkm_application')
   if (error) throw new Error(error.message)
@@ -42,14 +34,6 @@ export async function applyAsUmkm(fields) {
     is_verified: false,
   }
 
-  console.log('Payload Insert:', {
-    user_id: Boolean(payload.user_id),
-    status: payload.status,
-    is_active: payload.is_active,
-    is_verified: payload.is_verified,
-    has_region_id: Boolean(payload.region_id),
-  })
-
   const { error: insertError } = await supabase.from('umkm').insert(payload)
   if (insertError) {
     const code = insertError.code ? ` (${insertError.code})` : ''
@@ -74,7 +58,7 @@ export async function listMyUmkmProducts(umkmId) {
   return takeProduct(
     await supabase
       .from('products')
-      .select('id, name, slug, description, price, stock, category_id, is_active, categories(name), product_images(id, url, sort_order)')
+      .select('id, name, slug, description, price, stock, weight_gram, category_id, is_active, categories(name), product_images(id, url, sort_order)')
       .eq('umkm_id', umkmId)
       .order('created_at', { ascending: false }),
   ) ?? []

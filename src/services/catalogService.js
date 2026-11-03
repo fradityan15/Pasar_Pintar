@@ -1,7 +1,14 @@
 import { supabase } from '@/lib/supabase'
 
 const PRODUCT_FIELDS =
-  'id, name, slug, price, stock, is_active, umkm(id, name, slug, regions(name)), product_images(url, sort_order)'
+  'id, name, slug, price, stock, is_active, umkm!inner(id, name, slug, regions(name)), product_images(url, sort_order)'
+
+function onlyPublicStoreProducts(query) {
+  return query
+    .eq('umkm.is_active', true)
+    .eq('umkm.is_verified', true)
+    .eq('umkm.status', 'active')
+}
 
 function check({ data, error, count }) {
   if (error) throw new Error(error.message)
@@ -19,12 +26,12 @@ export async function listCategories() {
 
 /** Daftar produk aktif dengan pencarian, filter kategori (termasuk subkategori), dan halaman. */
 export async function listProducts({ q = '', categoryIds = null, page = 1, pageSize = 12 } = {}) {
-  let query = supabase
+  let query = onlyPublicStoreProducts(supabase
     .from('products')
     .select(PRODUCT_FIELDS, { count: 'exact' })
     .eq('is_active', true)
     .order('created_at', { ascending: false })
-    .range((page - 1) * pageSize, page * pageSize - 1)
+    .range((page - 1) * pageSize, page * pageSize - 1))
 
   const term = q.trim().replace(/[%,()]/g, ' ')
   if (term) query = query.ilike('name', `%${term}%`)
@@ -35,22 +42,22 @@ export async function listProducts({ q = '', categoryIds = null, page = 1, pageS
 }
 
 export async function listFeatured(limit = 8) {
-  const res = await supabase
+  const res = await onlyPublicStoreProducts(supabase
     .from('products')
     .select(PRODUCT_FIELDS)
     .eq('is_active', true)
     .order('created_at', { ascending: false })
-    .limit(limit)
+    .limit(limit))
   return check(res).data
 }
 
 export async function getProductBySlug(slug) {
-  const { data, error } = await supabase
+  const { data, error } = await onlyPublicStoreProducts(supabase
     .from('products')
-    .select('id, name, slug, description, price, stock, weight_gram, is_active, umkm(id, name, slug, logo_url, description, is_verified, regions(name, province)), categories(name), product_images(url, sort_order)')
+    .select('id, name, slug, description, price, stock, weight_gram, is_active, umkm!inner(id, name, slug, logo_url, description, is_verified, regions(name, province)), categories(name), product_images(url, sort_order)')
     .eq('slug', slug)
     .eq('is_active', true)
-    .maybeSingle()
+    .maybeSingle())
   if (error) throw new Error(error.message)
   return data
 }

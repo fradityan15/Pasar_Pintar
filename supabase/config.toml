@@ -1,0 +1,14 @@
+[functions.create-payment]
+verify_jwt = true
+
+[functions.payment-webhook]
+verify_jwt = false
+
+[functions.rajaongkir-rates]
+verify_jwt = true
+
+[functions.search-rajaongkir-areas]
+verify_jwt = true
+
+[functions.shipping-track]
+verify_jwt = true

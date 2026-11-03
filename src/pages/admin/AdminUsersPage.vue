@@ -15,7 +15,7 @@ const loading = ref(true)
 const error = ref('')
 const notice = ref('')
 const search = ref(str('q'))
-const tabs = [['', 'Semua'], ['admin', 'Admin'], ['customer', 'Pelanggan']]
+const tabs = [['', 'Semua'], ['admin', 'Admin'], ['super_admin', 'Super Admin'], ['customer', 'Pelanggan']]
 let req = 0
 
 async function load() {
@@ -36,7 +36,7 @@ async function load() {
 watch(() => route.query, () => { if (route.name === 'admin-pengguna') load() }, { immediate: true })
 
 async function ubahPeran(u, role) {
-  const label = role === 'admin' ? 'Admin' : 'Pelanggan'
+  const label = role === 'super_admin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Pelanggan'
   if (!confirm(`Ubah peran ${u.full_name || 'pengguna ini'} menjadi ${label}?`)) { await load(); return }
   notice.value = ''
   error.value = ''
@@ -51,7 +51,7 @@ async function ubahPeran(u, role) {
 </script>
 
 <template>
-  <AdminPageHeader title="Pengguna" desc="Kelola peran akun. Admin memiliki akses penuh ke panel ini." />
+  <AdminPageHeader title="Pengguna" desc="Admin operasional dikelola terpisah dari Super Admin." />
 
   <div class="card p-4 md:p-6">
     <div class="flex flex-wrap gap-x-5 border-b border-line" role="tablist" aria-label="Filter peran">
@@ -83,10 +83,12 @@ async function ubahPeran(u, role) {
             <td class="p-3 text-muted">{{ formatTanggal(u.created_at) }}</td>
             <td class="p-3">
               <label :for="`peran-${u.id}`" class="sr-only">Peran {{ u.full_name }}</label>
-              <select :id="`peran-${u.id}`" class="input !min-h-[36px] max-w-[160px]" :value="u.role" :disabled="u.id === auth.user?.id" @change="ubahPeran(u, $event.target.value)">
+              <select v-if="auth.isSuperAdmin" :id="`peran-${u.id}`" class="input !min-h-[36px] max-w-[160px]" :value="u.role" :disabled="u.id === auth.user?.id" @change="ubahPeran(u, $event.target.value)">
                 <option value="customer">Pelanggan</option>
                 <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
               </select>
+              <span v-else class="badge">{{ u.role === 'super_admin' ? 'Super Admin' : u.role === 'admin' ? 'Admin' : 'Pelanggan' }}</span>
             </td>
           </tr>
         </tbody>

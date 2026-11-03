@@ -22,7 +22,7 @@ const editingId = ref(null)
 const formError = ref('')
 const savedImages = ref([])
 const pendingImages = ref([])
-const form = reactive({ name: '', slug: '', description: '', category_id: '', price: 0, stock: 0, is_active: true })
+const form = reactive({ name: '', slug: '', description: '', category_id: '', price: 0, stock: 0, weight_gram: 0, is_active: true })
 const slugTouched = ref(false)
 const filteredProducts = computed(() => {
   const query = search.value.trim().toLocaleLowerCase('id')
@@ -77,6 +77,7 @@ function bukaForm(product = null) {
     category_id: product?.category_id ?? '',
     price: product?.price ?? 0,
     stock: product?.stock ?? 0,
+    weight_gram: product?.weight_gram ?? 0,
     is_active: product?.is_active ?? true,
   })
   slugTouched.value = !!product
@@ -138,6 +139,10 @@ async function simpanProduk() {
     const slug = form.slug.trim()
     if (!name) throw new Error('Nama produk wajib diisi.')
     if (!slug) throw new Error('Slug produk wajib diisi.')
+    const weight = Number(form.weight_gram)
+    if (!Number.isSafeInteger(weight) || weight <= 0) {
+      throw new Error('Berat produk wajib diisi dalam gram dan harus lebih dari 0.')
+    }
 
     const fields = {
       name,
@@ -146,6 +151,7 @@ async function simpanProduk() {
       category_id: form.category_id || null,
       price: Number(form.price),
       stock: Number(form.stock),
+      weight_gram: weight,
       is_active: form.is_active,
     }
     const productId = await saveMyUmkmProduct(editingId.value, umkm.value.id, fields)
@@ -271,6 +277,7 @@ function duplikatProduk(product) {
                 <h3 class="mt-1 truncate text-lg font-bold text-slate-900">{{ product.name }}</h3>
                 <p class="mt-1 min-h-10 line-clamp-2 text-sm text-slate-500">{{ product.description || 'Tanpa deskripsi' }}</p>
                 <p class="mt-3 text-lg font-bold text-gray-900">{{ formatRupiah(product.price) }}</p>
+                <p class="mt-1 text-xs text-slate-500">Berat: {{ Number(product.weight_gram) > 0 ? `${product.weight_gram} gram` : 'Belum diisi' }}</p>
                 <div class="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
                   <button class="rounded-lg border border-gray-900 bg-white px-3 py-2 text-xs font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="bukaForm(product)">Ubah</button>
                   <button class="rounded-lg border border-gray-900 bg-white px-3 py-2 text-xs font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="duplikatProduk(product)">Duplikat</button>
@@ -330,6 +337,11 @@ function duplikatProduk(product) {
                 <label for="seller-product-stock" class="mb-1.5 block text-sm font-medium text-slate-700">Stok</label>
                 <input id="seller-product-stock" v-model.number="form.stock" class="input" type="number" min="0" step="1" required />
               </div>
+            </div>
+            <div>
+              <label for="seller-product-weight" class="mb-1.5 block text-sm font-medium text-slate-700">Berat produk (gram)</label>
+              <input id="seller-product-weight" v-model.number="form.weight_gram" class="input" type="number" min="1" step="1" required />
+              <p class="mt-1 text-xs text-slate-500">Berat diperlukan untuk menghitung ongkos kirim.</p>
             </div>
             <div class="md:col-span-2">
               <label for="seller-product-description" class="mb-1.5 block text-sm font-medium text-slate-700">Deskripsi</label>

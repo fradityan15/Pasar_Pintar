@@ -10,6 +10,7 @@ const route = useRoute()
 const mobileMenuOpen = ref(false)
 const activeItem = computed(() => {
   if (route.name === 'umkm-orders') return 'orders'
+  if (route.name === 'umkm-wallet') return 'wallet'
   if (route.name === 'umkm-settings') return 'settings'
   if (route.name === 'umkm-dashboard') return 'overview'
   if (route.name === 'umkm-products') return 'products'
@@ -95,6 +96,12 @@ const linkClass = (isActive) => [
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8Zm4 0a3 3 0 0 1 6 0M8 12h.01M16 12h.01" />
         </svg>
         Pesanan
+      </RouterLink>
+      <RouterLink :to="{ name: 'umkm-wallet' }" :class="linkClass(activeItem === 'wallet')" :aria-current="activeItem === 'wallet' ? 'page' : undefined" @click="mobileMenuOpen = false">
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 9h18M16 14h2" />
+        </svg>
+        Saldo & Penarikan
       </RouterLink>
       <RouterLink :to="{ name: 'umkm-settings' }" :class="linkClass(activeItem === 'settings')" :aria-current="activeItem === 'settings' ? 'page' : undefined" @click="mobileMenuOpen = false">
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

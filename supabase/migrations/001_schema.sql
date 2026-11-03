@@ -4,9 +4,49 @@
 create extension if not exists pgcrypto;
 create schema if not exists private;
 
-create type public.user_role as enum ('admin', 'customer');
-create type public.order_status as enum ('menunggu_pembayaran', 'diproses', 'dikirim', 'selesai', 'dibatalkan');
-create type public.payment_status as enum ('belum_dibayar', 'dibayar', 'kedaluwarsa');
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public'
+      and t.typname = 'user_role'
+  ) then
+    create type public.user_role as enum ('admin', 'customer');
+  end if;
+end;
+$$;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public'
+      and t.typname = 'order_status'
+  ) then
+    create type public.order_status as enum (
+      'menunggu_pembayaran', 'diproses', 'dikirim', 'selesai', 'dibatalkan'
+    );
+  end if;
+end;
+$$;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where n.nspname = 'public'
+      and t.typname = 'payment_status'
+  ) then
+    create type public.payment_status as enum ('belum_dibayar', 'dibayar', 'kedaluwarsa');
+  end if;
+end;
+$$;
 
 create or replace function public.set_updated_at() returns trigger
 language plpgsql as $$

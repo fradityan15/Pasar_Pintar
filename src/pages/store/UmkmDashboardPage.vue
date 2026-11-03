@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ArcElement, CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Tooltip } from 'chart.js'
 import { Doughnut, Line } from 'vue-chartjs'
@@ -7,6 +7,7 @@ import SellerDashboardSidebar from '@/components/SellerDashboardSidebar.vue'
 import { formatRupiah, formatTanggalJam } from '@/lib/format'
 import { getMyUmkm, getMyUmkmDashboardMetrics, listMyUmkmProducts } from '@/services/umkmPartnerService'
 import { listSellerOrders } from '@/services/sellerOrderService'
+import { getSellerPaidPayoutSummary } from '@/services/walletService'
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
@@ -14,8 +15,10 @@ const umkm = ref(null)
 const products = ref([])
 const orders = ref([])
 const metrics = ref(null)
+const payoutSummary = ref({ paid_payout_total: 0, paid_payout_count: 0, last_paid_at: null })
 const loading = ref(true)
 const error = ref('')
+let payoutRefreshTimer
 const canManage = computed(() => umkm.value?.status === 'active' && umkm.value.is_active)
 const recentOrders = computed(() => orders.value
   .filter((order) => order.seller_shipping_status === 'menunggu_diproses'
@@ -127,18 +130,21 @@ async function load() {
   try {
     umkm.value = await getMyUmkm()
     if (canManage.value) {
-      const [dashboardMetrics, myProducts, sellerOrders] = await Promise.all([
+      const [dashboardMetrics, myProducts, sellerOrders, paidPayoutSummary] = await Promise.all([
         getMyUmkmDashboardMetrics(umkm.value.id),
         listMyUmkmProducts(umkm.value.id),
         listSellerOrders(umkm.value.id),
+        getSellerPaidPayoutSummary(umkm.value.id),
       ])
       metrics.value = dashboardMetrics
       products.value = myProducts
       orders.value = sellerOrders
+      payoutSummary.value = paidPayoutSummary?.[0] ?? payoutSummary.value
     } else {
       metrics.value = null
       products.value = []
       orders.value = []
+      payoutSummary.value = { paid_payout_total: 0, paid_payout_count: 0, last_paid_at: null }
     }
   } catch (loadError) {
     error.value = loadError.message
@@ -147,62 +153,215 @@ async function load() {
   }
 }
 
-onMounted(load)
+async function refreshPayoutSummary() {
+  if (!umkm.value?.id || !canManage.value) return
+  try {
+    payoutSummary.value = (await getSellerPaidPayoutSummary(umkm.value.id))?.[0] ?? payoutSummary.value
+  } catch (loadError) {
+    error.value = loadError.message || 'Ringkasan pencairan tidak dapat dimuat.'
+  }
+}
+
+onMounted(() => {
+  load()
+  payoutRefreshTimer = window.setInterval(refreshPayoutSummary, 30_000)
+})
+
+onBeforeUnmount(() => {
+  window.clearInterval(payoutRefreshTimer)
+})
 </script>
 
 <template>
   <div class="min-h-full bg-slate-50 lg:flex">
     <SellerDashboardSidebar :umkm="umkm" />
-    <main id="ringkasan" class="min-w-0 flex-1 scroll-mt-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <main
+      id="ringkasan"
+      class="min-w-0 flex-1 scroll-mt-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+    >
       <div class="mx-auto max-w-7xl">
         <header class="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p class="text-sm font-medium text-emerald-700">Dasbor penjual</p>
-            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Ringkasan Toko</h1>
-            <p class="mt-1.5 text-sm text-slate-500">Pantau performa dan aktivitas {{ umkm?.name || 'toko Anda' }}.</p>
+            <p class="text-sm font-medium text-emerald-700">
+              Dasbor penjual
+            </p>
+            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Ringkasan Toko
+            </h1>
+            <p class="mt-1.5 text-sm text-slate-500">
+              Pantau performa dan aktivitas {{ umkm?.name || 'toko Anda' }}.
+            </p>
           </div>
-          <span v-if="canManage" class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>Toko aktif
+          <span
+            v-if="canManage"
+            class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"
+          >
+            <span class="h-2 w-2 rounded-full bg-emerald-500" />Toko aktif
           </span>
         </header>
 
-        <p v-if="error" class="mt-5 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700" role="alert">
-          {{ error }} <button class="font-semibold underline" type="button" @click="load">Coba lagi</button>
+        <p
+          v-if="error"
+          class="mt-5 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700"
+          role="alert"
+        >
+          {{ error }} <button
+            class="font-semibold underline"
+            type="button"
+            @click="load"
+          >
+            Coba lagi
+          </button>
         </p>
-        <div v-if="loading" class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div v-for="n in 4" :key="n" class="h-32 animate-pulse rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"></div>
+        <div
+          v-if="loading"
+          class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
+        >
+          <div
+            v-for="n in 5"
+            :key="n"
+            class="h-32 animate-pulse rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+          />
         </div>
-        <div v-else-if="!umkm" class="mt-6 rounded-xl border border-slate-200 bg-white p-6">
-          <p class="font-semibold text-slate-900">Data UMKM tidak ditemukan.</p>
-          <RouterLink :to="{ name: 'akun' }" class="mt-2 inline-block text-sm font-semibold text-gray-900 underline">Periksa pendaftaran di halaman akun</RouterLink>
+        <div
+          v-else-if="!umkm"
+          class="mt-6 rounded-xl border border-slate-200 bg-white p-6"
+        >
+          <p class="font-semibold text-slate-900">
+            Data UMKM tidak ditemukan.
+          </p>
+          <RouterLink
+            :to="{ name: 'akun' }"
+            class="mt-2 inline-block text-sm font-semibold text-gray-900 underline"
+          >Periksa pendaftaran di halaman akun</RouterLink>
         </div>
-        <div v-else-if="!canManage" class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900" role="status">
+        <div
+          v-else-if="!canManage"
+          class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900"
+          role="status"
+        >
           Pendaftaran UMKM belum aktif. Analitik tersedia setelah Admin PasarPintar menyetujui dan mengaktifkan toko.
         </div>
         <template v-else>
-          <section class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Metrik toko">
+          <section
+            class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
+            aria-label="Metrik toko"
+          >
             <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
               <div class="flex items-start justify-between gap-3">
-                <div><p class="text-sm font-medium text-slate-500">Total Pendapatan</p><p class="mt-3 text-2xl font-bold tracking-tight text-gray-900">{{ formatRupiah(totalIncome) }}</p><p class="mt-1 text-xs text-slate-500">Akumulasi penjualan dibayar</p></div>
-                <span class="rounded-xl bg-emerald-50 p-3 text-lg font-bold text-emerald-700">Rp</span>
+                <div>
+                  <p class="text-sm font-medium text-slate-500">
+                    Total Pendapatan
+                  </p><p class="mt-3 text-2xl font-bold tracking-tight text-gray-900">
+                    {{ formatRupiah(totalIncome) }}
+                  </p><p class="mt-1 text-xs text-slate-500">
+                    Akumulasi penjualan dibayar
+                  </p>
+                </div>
+                <span class="rounded-xl bg-emerald-50 p-2.5 text-base font-bold text-emerald-700">Rp</span>
+              </div>
+            </article>
+            <RouterLink
+              :to="{ name: 'umkm-wallet' }"
+              class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:ring-emerald-300"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium text-slate-500">Pencairan berhasil</p>
+                  <p class="mt-3 text-2xl font-bold tracking-tight text-gray-900">
+                    {{ formatRupiah(payoutSummary.paid_payout_total) }}
+                  </p>
+                  <p class="mt-1 text-xs text-slate-500">
+                    {{ payoutSummary.paid_payout_count }} pencairan tercatat · simulasi
+                  </p>
+                  <p v-if="payoutSummary.last_paid_at" class="mt-1 text-xs text-emerald-700">
+                    Terakhir {{ formatTanggalJam(payoutSummary.last_paid_at) }}
+                  </p>
+                </div>
+                <span class="rounded-xl bg-emerald-50 p-3 text-emerald-700">
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v4h14v-4" />
+                  </svg>
+                </span>
+              </div>
+            </RouterLink>
+            <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium text-slate-500">
+                    Pesanan Masuk
+                  </p><p class="mt-3 text-3xl font-bold tracking-tight text-slate-900">
+                    {{ pendingOrders }}
+                  </p><p class="mt-1 text-xs text-slate-500">
+                    Menunggu diproses
+                  </p>
+                </div>
+                <span class="rounded-xl bg-amber-50 p-3 text-amber-700"><svg
+                  viewBox="0 0 24 24"
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                ><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 8h14l1 12H4L5 8Zm4 0a3 3 0 0 1 6 0"
+                /></svg></span>
               </div>
             </article>
             <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
               <div class="flex items-start justify-between gap-3">
-                <div><p class="text-sm font-medium text-slate-500">Pesanan Masuk</p><p class="mt-3 text-3xl font-bold tracking-tight text-slate-900">{{ pendingOrders }}</p><p class="mt-1 text-xs text-slate-500">Menunggu diproses</p></div>
-                <span class="rounded-xl bg-amber-50 p-3 text-amber-700"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8Zm4 0a3 3 0 0 1 6 0" /></svg></span>
+                <div>
+                  <p class="text-sm font-medium text-slate-500">
+                    Produk Aktif
+                  </p><p class="mt-3 text-3xl font-bold tracking-tight text-slate-900">
+                    {{ activeProducts }}
+                  </p><p class="mt-1 text-xs text-slate-500">
+                    Dari {{ products.length }} produk
+                  </p>
+                </div>
+                <span class="rounded-xl bg-blue-50 p-3 text-blue-700"><svg
+                  viewBox="0 0 24 24"
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                ><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7M12 11v10"
+                /></svg></span>
               </div>
             </article>
             <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
               <div class="flex items-start justify-between gap-3">
-                <div><p class="text-sm font-medium text-slate-500">Produk Aktif</p><p class="mt-3 text-3xl font-bold tracking-tight text-slate-900">{{ activeProducts }}</p><p class="mt-1 text-xs text-slate-500">Dari {{ products.length }} produk</p></div>
-                <span class="rounded-xl bg-blue-50 p-3 text-blue-700"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7M12 11v10" /></svg></span>
-              </div>
-            </article>
-            <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              <div class="flex items-start justify-between gap-3">
-                <div><p class="text-sm font-medium text-slate-500">Kunjungan Toko</p><p class="mt-3 text-2xl font-bold tracking-tight text-slate-900">Belum tersedia</p><p class="mt-1 text-xs text-slate-500">Pelacakan kunjungan belum diaktifkan</p></div>
-                <span class="rounded-xl bg-violet-50 p-3 text-violet-700"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" /><circle cx="12" cy="12" r="2.5" /></svg></span>
+                <div>
+                  <p class="text-sm font-medium text-slate-500">
+                    Kunjungan Toko
+                  </p><p class="mt-3 text-2xl font-bold tracking-tight text-slate-900">
+                    Belum tersedia
+                  </p><p class="mt-1 text-xs text-slate-500">
+                    Pelacakan kunjungan belum diaktifkan
+                  </p>
+                </div>
+                <span class="rounded-xl bg-violet-50 p-3 text-violet-700"><svg
+                  viewBox="0 0 24 24"
+                  class="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                ><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"
+                /><circle
+                  cx="12"
+                  cy="12"
+                  r="2.5"
+                /></svg></span>
               </div>
             </article>
           </section>
@@ -210,33 +369,95 @@ onMounted(load)
           <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.8fr)_minmax(18rem,1fr)]">
             <article class="min-w-0 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900">Pendapatan & Penjualan</h2>
-                <p class="mt-1 text-sm text-slate-500">Tren pendapatan dan unit terjual selama 7 hari terakhir.</p>
+                <h2 class="text-lg font-semibold text-slate-900">
+                  Pendapatan & Penjualan
+                </h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Pendapatan dan unit terjual dikelompokkan menurut tanggal pembayaran (WIB) selama 7 hari terakhir.
+                </p>
               </div>
-              <p v-if="!hasSalesData" class="mt-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">Belum ada penjualan dalam tujuh hari terakhir.</p>
-              <div v-else class="mt-5 h-[300px]"><Line :data="salesChartData" :options="salesChartOptions" /></div>
+              <p
+                v-if="!hasSalesData"
+                class="mt-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-500"
+              >
+                Belum ada penjualan dalam tujuh hari terakhir.
+              </p>
+              <div
+                v-else
+                class="mt-5 h-[300px]"
+              >
+                <Line
+                  :data="salesChartData"
+                  :options="salesChartOptions"
+                />
+              </div>
             </article>
             <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900">Komposisi Katalog</h2>
-                <p class="mt-1 text-sm text-slate-500">Jumlah produk yang dikelompokkan menurut kategori.</p>
+                <h2 class="text-lg font-semibold text-slate-900">
+                  Komposisi Katalog
+                </h2>
+                <p class="mt-1 text-sm text-slate-500">
+                  Jumlah produk yang dikelompokkan menurut kategori.
+                </p>
               </div>
-              <p v-if="!products.length" class="mt-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">Belum ada produk untuk ditampilkan.</p>
-              <div v-else class="mx-auto mt-4 h-[260px] max-w-sm"><Doughnut :data="categoryChartData" :options="categoryChartOptions" /></div>
+              <p
+                v-if="!products.length"
+                class="mt-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-500"
+              >
+                Belum ada produk untuk ditampilkan.
+              </p>
+              <div
+                v-else
+                class="mx-auto mt-4 h-[260px] max-w-sm"
+              >
+                <Doughnut
+                  :data="categoryChartData"
+                  :options="categoryChartOptions"
+                />
+              </div>
             </article>
           </section>
 
-          <section class="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200" aria-labelledby="recent-orders-title">
+          <section
+            class="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+            aria-labelledby="recent-orders-title"
+          >
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
-              <div><h2 id="recent-orders-title" class="text-lg font-semibold text-slate-900">Pesanan yang Perlu Diproses</h2><p class="mt-1 text-sm text-slate-500">Maksimal lima pesanan terbaru yang menunggu tindakan.</p></div>
-              <RouterLink :to="{ name: 'umkm-orders' }" class="text-sm font-semibold text-gray-900 hover:text-gray-900">Semua pesanan →</RouterLink>
+              <div>
+                <h2
+                  id="recent-orders-title"
+                  class="text-lg font-semibold text-slate-900"
+                >
+                  Pesanan yang Perlu Diproses
+                </h2><p class="mt-1 text-sm text-slate-500">
+                  Maksimal lima pesanan terbaru yang menunggu tindakan.
+                </p>
+              </div>
+              <RouterLink
+                :to="{ name: 'umkm-orders' }"
+                class="text-sm font-semibold text-gray-900 hover:text-gray-900"
+              >Semua pesanan →</RouterLink>
             </div>
-            <div v-if="recentOrders.length" class="divide-y divide-slate-100">
-              <div v-for="order in recentOrders" :key="order.order_id" class="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div
+              v-if="recentOrders.length"
+              class="divide-y divide-slate-100"
+            >
+              <div
+                v-for="order in recentOrders"
+                :key="order.order_id"
+                class="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+              >
                 <div class="min-w-0">
-                  <p class="font-semibold text-slate-900">{{ order.order_no }} <span class="font-normal text-slate-500">· {{ order.customer_name }}</span></p>
-                  <p class="mt-1 truncate text-sm text-slate-500">{{ (order.products ?? []).map((item) => `${item.product_name} × ${item.quantity}`).join(', ') }}</p>
-                  <p class="mt-1 text-xs text-slate-400">{{ formatTanggalJam(order.created_at) }}</p>
+                  <p class="font-semibold text-slate-900">
+                    {{ order.order_no }} <span class="font-normal text-slate-500">· {{ order.customer_name }}</span>
+                  </p>
+                  <p class="mt-1 truncate text-sm text-slate-500">
+                    {{ (order.products ?? []).map((item) => `${item.product_name} × ${item.quantity}`).join(', ') }}
+                  </p>
+                  <p class="mt-1 text-xs text-slate-400">
+                    {{ formatTanggalJam(order.created_at) }}
+                  </p>
                 </div>
                 <div class="flex items-center justify-between gap-4 sm:justify-end">
                   <span class="font-bold text-gray-900">{{ formatRupiah(order.total) }}</span>
@@ -244,7 +465,12 @@ onMounted(load)
                 </div>
               </div>
             </div>
-            <p v-else class="px-5 py-10 text-center text-sm text-slate-500">Tidak ada pesanan yang menunggu diproses.</p>
+            <p
+              v-else
+              class="px-5 py-10 text-center text-sm text-slate-500"
+            >
+              Tidak ada pesanan yang menunggu diproses.
+            </p>
           </section>
         </template>
       </div>

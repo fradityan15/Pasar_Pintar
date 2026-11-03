@@ -25,7 +25,7 @@ const metricCards = computed(() => [
   {
     label: 'Total Pendapatan Platform',
     value: formatRupiah(analytics.value?.total_pendapatan_platform),
-    detail: 'GMV produk dari transaksi sukses',
+    detail: 'GMV produk dari transaksi sukses; mengikuti tanggal pembayaran WIB',
     iconClass: 'bg-gray-100 text-gray-900',
     iconLabel: 'Rp',
   },
@@ -114,87 +114,183 @@ onMounted(load)
   <div class="space-y-6">
     <header class="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <p class="text-sm font-medium text-emerald-700">Analitik platform</p>
+        <p class="text-sm font-medium text-emerald-700">
+          Analitik platform
+        </p>
         <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900">
           Halo, {{ auth.profile?.full_name || 'Admin' }}
         </h1>
-        <p class="mt-1 text-sm text-slate-500">Ringkasan performa global PasarPintar.</p>
+        <p class="mt-1 text-sm text-slate-500">
+          Ringkasan performa global PasarPintar.
+        </p>
       </div>
-      <button class="btn-outline" type="button" :disabled="loading" @click="load">
+      <button
+        class="btn-outline"
+        type="button"
+        :disabled="loading"
+        @click="load"
+      >
         {{ loading ? 'Memuat…' : 'Muat ulang' }}
       </button>
     </header>
 
-    <p v-if="error" class="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700" role="alert">
+    <p
+      v-if="error"
+      class="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700"
+      role="alert"
+    >
       Data analitik belum bisa dimuat: {{ error }}
-      <button class="ml-2 font-semibold underline" type="button" @click="load">Coba lagi</button>
+      <button
+        class="ml-2 font-semibold underline"
+        type="button"
+        @click="load"
+      >
+        Coba lagi
+      </button>
     </p>
 
-    <div v-if="loading && !analytics" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <div v-for="n in 4" :key="n" class="h-36 animate-pulse rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"></div>
+    <div
+      v-if="loading && !analytics"
+      class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+    >
+      <div
+        v-for="n in 4"
+        :key="n"
+        class="h-36 animate-pulse rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+      />
     </div>
 
     <template v-else-if="analytics">
-      <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Metrik platform">
-        <article v-for="card in metricCards" :key="card.label" class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <section
+        class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        aria-label="Metrik platform"
+      >
+        <article
+          v-for="card in metricCards"
+          :key="card.label"
+          class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+        >
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <p class="text-sm font-medium text-slate-500">{{ card.label }}</p>
-              <p class="mt-3 break-words text-2xl font-bold tracking-tight text-slate-900">{{ card.value }}</p>
+              <p class="text-sm font-medium text-slate-500">
+                {{ card.label }}
+              </p>
+              <p class="mt-3 break-words text-2xl font-bold tracking-tight text-slate-900">
+                {{ card.value }}
+              </p>
             </div>
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" :class="card.iconClass" aria-hidden="true">
-              <span v-if="card.iconLabel" class="text-sm font-bold">{{ card.iconLabel }}</span>
-              <svg v-else class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <span
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              :class="card.iconClass"
+              aria-hidden="true"
+            >
+              <span
+                v-if="card.iconLabel"
+                class="text-sm font-bold"
+              >{{ card.iconLabel }}</span>
+              <svg
+                v-else
+                class="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path :d="card.iconPath" />
               </svg>
             </span>
           </div>
-          <p class="mt-3 text-xs text-slate-400">{{ card.detail }}</p>
+          <p class="mt-3 text-xs text-slate-400">
+            {{ card.detail }}
+          </p>
         </article>
       </section>
 
       <section class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 class="text-lg font-bold text-slate-900">Tren Transaksi 30 Hari Terakhir</h2>
-            <p class="mt-1 text-sm text-slate-500">Jumlah transaksi sukses per hari berdasarkan waktu pembayaran.</p>
+            <h2 class="text-lg font-bold text-slate-900">
+              Tren Transaksi 30 Hari Terakhir
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Jumlah transaksi sukses per hari berdasarkan waktu pembayaran.
+            </p>
           </div>
           <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">30 hari</span>
         </div>
-        <p v-if="!trend.some((row) => Number(row.jumlah) > 0)" class="mt-5 rounded-xl bg-slate-50 p-5 text-sm text-slate-500">
+        <p
+          v-if="!trend.some((row) => Number(row.jumlah) > 0)"
+          class="mt-5 rounded-xl bg-slate-50 p-5 text-sm text-slate-500"
+        >
           Belum ada transaksi sukses dalam periode ini.
         </p>
-        <div v-else class="mt-5 h-64">
-          <Line :data="trendChartData" :options="trendChartOptions" />
+        <div
+          v-else
+          class="mt-5 h-64"
+        >
+          <Line
+            :data="trendChartData"
+            :options="trendChartOptions"
+          />
         </div>
       </section>
 
       <section class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
         <div class="border-b border-slate-100 px-5 py-5 sm:px-6">
-          <h2 class="text-lg font-bold text-slate-900">5 UMKM dengan Penjualan Tertinggi</h2>
-          <p class="mt-1 text-sm text-slate-500">Diurutkan berdasarkan nilai produk dari transaksi yang sukses.</p>
+          <h2 class="text-lg font-bold text-slate-900">
+            5 UMKM dengan Penjualan Tertinggi
+          </h2>
+          <p class="mt-1 text-sm text-slate-500">
+            Diurutkan berdasarkan nilai produk dari transaksi yang sukses.
+          </p>
         </div>
-        <div v-if="!leaderboard.length" class="px-6 py-12 text-center text-sm text-slate-500">
+        <div
+          v-if="!leaderboard.length"
+          class="px-6 py-12 text-center text-sm text-slate-500"
+        >
           Belum ada penjualan sukses dari UMKM aktif.
         </div>
-        <div v-else class="overflow-x-auto">
+        <div
+          v-else
+          class="overflow-x-auto"
+        >
           <table class="w-full min-w-[640px] text-left text-sm">
             <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
-                <th class="px-6 py-3 text-left font-semibold">Peringkat</th>
-                <th class="px-6 py-3 text-left font-semibold">UMKM</th>
-                <th class="px-6 py-3 text-center font-semibold">Transaksi</th>
-                <th class="px-6 py-3 text-right font-semibold">Total Penjualan</th>
+                <th class="px-6 py-3 text-left font-semibold">
+                  Peringkat
+                </th>
+                <th class="px-6 py-3 text-left font-semibold">
+                  UMKM
+                </th>
+                <th class="px-6 py-3 text-center font-semibold">
+                  Transaksi
+                </th>
+                <th class="px-6 py-3 text-right font-semibold">
+                  Total Penjualan
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(umkm, index) in leaderboard" :key="umkm.umkm_id" class="border-t border-slate-100">
+              <tr
+                v-for="(umkm, index) in leaderboard"
+                :key="umkm.umkm_id"
+                class="border-t border-slate-100"
+              >
                 <td class="px-6 py-4 text-left">
                   <span class="font-semibold text-gray-900">{{ index + 1 }}</span>
                 </td>
-                <td class="px-6 py-4 text-left font-semibold text-slate-800">{{ umkm.nama }}</td>
-                <td class="px-6 py-4 text-center text-slate-600">{{ numberFormat.format(Number(umkm.jumlah_transaksi)) }}</td>
-                <td class="px-6 py-4 text-right font-bold text-gray-900">{{ formatRupiah(umkm.total_penjualan) }}</td>
+                <td class="px-6 py-4 text-left font-semibold text-slate-800">
+                  {{ umkm.nama }}
+                </td>
+                <td class="px-6 py-4 text-center text-slate-600">
+                  {{ numberFormat.format(Number(umkm.jumlah_transaksi)) }}
+                </td>
+                <td class="px-6 py-4 text-right font-bold text-gray-900">
+                  {{ formatRupiah(umkm.total_penjualan) }}
+                </td>
               </tr>
             </tbody>
           </table>

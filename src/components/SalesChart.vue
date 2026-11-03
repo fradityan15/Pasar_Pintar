@@ -35,12 +35,46 @@ const bars = computed(() => {
 </script>
 
 <template>
-  <svg ref="chart" :viewBox="`0 0 ${W} ${H}`" role="img" aria-label="Grafik batang omzet harian" class="h-56 w-full">
-    <line :x1="L" :x2="W - R" :y1="H - B" :y2="H - B" stroke="#E8E8EC" />
-    <rect v-for="b in bars" :key="b.key" :x="b.x" :y="b.y" :width="b.w" :height="Math.max(b.h, 1)" rx="3" fill="#059669">
+  <svg
+    ref="chart"
+    :viewBox="`0 0 ${W} ${H}`"
+    role="img"
+    aria-label="Grafik batang omzet harian berdasarkan tanggal pembayaran WIB"
+    class="h-56 w-full"
+  >
+    <line
+      :x1="L"
+      :x2="W - R"
+      :y1="H - B"
+      :y2="H - B"
+      stroke="#E8E8EC"
+    />
+    <rect
+      v-for="b in bars"
+      :key="b.key"
+      :x="b.x"
+      :y="b.y"
+      :width="b.w"
+      :height="Math.max(b.h, 1)"
+      rx="3"
+      fill="#059669"
+    >
       <title>{{ b.title }}</title>
     </rect>
-    <text v-if="data.length" :x="L" :y="H - 8" font-size="12" fill="#5B6270">{{ short(data[0].tanggal) }}</text>
-    <text v-if="data.length > 1" :x="W - R" :y="H - 8" font-size="12" fill="#5B6270" text-anchor="end">{{ short(data[data.length - 1].tanggal) }}</text>
+    <text
+      v-if="data.length"
+      :x="L"
+      :y="H - 8"
+      font-size="12"
+      fill="#5B6270"
+    >{{ short(data[0].tanggal) }}</text>
+    <text
+      v-if="data.length > 1"
+      :x="W - R"
+      :y="H - 8"
+      font-size="12"
+      fill="#5B6270"
+      text-anchor="end"
+    >{{ short(data[data.length - 1].tanggal) }}</text>
   </svg>
 </template>

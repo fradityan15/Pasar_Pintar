@@ -29,3 +29,8 @@ export const listUmkmAdmin = async () =>
 export async function saveUmkm(id, fields) {
   take(id ? await supabase.from('umkm').update(fields).eq('id', id) : await supabase.from('umkm').insert(fields))
 }
+
+export async function approveUmkm(id) {
+  const { error } = await supabase.rpc('admin_approve_umkm', { p_umkm_id: id })
+  if (error) throw new Error(error.message)
+}

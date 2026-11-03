@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import SellerDashboardSidebar from '@/components/SellerDashboardSidebar.vue'
+import RajaOngkirAreaPicker from '@/components/RajaOngkirAreaPicker.vue'
 import { getMyUmkm } from '@/services/umkmPartnerService'
 import { listRegions } from '@/services/adminCatalogService'
 import { deleteStoreAsset, getStoreSettings, saveStoreSettings, uploadStoreAsset } from '@/services/sellerStoreSettingsService'
@@ -45,6 +46,7 @@ const form = reactive({
   tagline: '',
   description: '',
   address: '',
+  rajaongkir_origin_area_id: '',
   region_id: '',
   logo_url: '',
   banner_url: '',
@@ -108,6 +110,7 @@ async function load() {
       tagline: settings.tagline ?? '',
       description: settings.description ?? '',
       address: settings.address ?? '',
+      rajaongkir_origin_area_id: settings.rajaongkir_origin_area_id ?? '',
       region_id: settings.region_id ?? '',
       logo_url: settings.logo_url ?? '',
       banner_url: settings.banner_url ?? '',
@@ -291,6 +294,10 @@ async function simpanPerubahan() {
               <label class="block text-sm font-medium text-slate-700">Alamat Lengkap
                 <textarea v-model="form.address" class="input mt-1.5 w-full py-2" rows="3" maxlength="1000" placeholder="Nama jalan, nomor, kelurahan, kecamatan"></textarea>
               </label>
+              <div>
+                <RajaOngkirAreaPicker id="store-origin-area" v-model="form.rajaongkir_origin_area_id" />
+                <span class="mt-1 block text-xs font-normal text-slate-500">Diperlukan untuk menghitung ongkir dari lokasi toko.</span>
+              </div>
               <div class="grid gap-4 sm:grid-cols-2">
                 <label class="block text-sm font-medium text-slate-700">Provinsi
                   <select v-model="selectedProvince" class="input mt-1.5 w-full" @change="pilihProvinsi">

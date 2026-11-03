@@ -3,7 +3,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { formatRupiah } from '@/lib/format'
-import { FLAT_SHIPPING } from '@/lib/status'
 
 const cart = useCartStore()
 const router = useRouter()
@@ -51,7 +50,6 @@ const selectedItems = computed(() => cart.items.filter(selected))
 const selectedCount = computed(() => selectedItems.value.reduce((count, item) => count + item.quantity, 0))
 const selectedSubtotal = computed(() => selectedItems.value.reduce((sum, item) => sum + item.products.price * item.quantity, 0))
 const selectedProblems = computed(() => selectedItems.value.filter(bermasalah))
-const estimateShipping = computed(() => selectedItems.value.length ? FLAT_SHIPPING : 0)
 const allSelected = computed(() => cart.items.length > 0 && selectedIds.value.length === cart.items.length)
 
 function isGroupSelected(group) {
@@ -158,13 +156,13 @@ function checkout() {
         <p class="mt-1 text-xs text-slate-500">Untuk {{ selectedCount }} barang terpilih</p>
         <dl class="mt-5 flex flex-col gap-3 text-sm">
           <div class="flex justify-between gap-3"><dt class="text-slate-500">Subtotal harga barang</dt><dd class="text-right font-bold text-gray-900">{{ formatRupiah(selectedSubtotal) }}</dd></div>
-          <div class="flex justify-between gap-3"><dt class="text-slate-500">Estimasi ongkir</dt><dd class="text-right font-bold text-gray-900">{{ selectedItems.length ? formatRupiah(estimateShipping) : '—' }}</dd></div>
-          <div class="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-bold"><dt class="text-slate-900">Total sementara</dt><dd class="text-right font-bold text-gray-900">{{ formatRupiah(selectedSubtotal + estimateShipping) }}</dd></div>
+          <div class="flex justify-between gap-3"><dt class="text-slate-500">Ongkir</dt><dd class="text-right text-xs font-medium text-slate-600">Dihitung saat checkout</dd></div>
+          <div class="flex justify-between gap-3 border-t border-slate-200 pt-3 text-base font-bold"><dt class="text-slate-900">Subtotal sementara</dt><dd class="text-right font-bold text-gray-900">{{ formatRupiah(selectedSubtotal) }}</dd></div>
         </dl>
         <button class="btn bg-gray-900 text-white transition-colors hover:bg-black hover:shadow-md mt-5 min-h-12 w-full rounded-xl font-semibold disabled:cursor-not-allowed disabled:opacity-50" type="button" :disabled="!selectedItems.length || selectedProblems.length > 0 || actionBusy" @click="checkout">Lanjut ke Checkout</button>
         <p v-if="!selectedItems.length" class="mt-3 text-center text-xs text-slate-500">Pilih produk yang ingin Anda checkout.</p>
         <p v-else-if="selectedProblems.length" class="mt-3 text-xs text-bad-fg">Perbaiki atau hapus item terpilih yang bertanda merah sebelum checkout.</p>
-        <p class="mt-4 border-t border-slate-100 pt-3 text-xs leading-5 text-slate-500">Ongkir adalah perkiraan sementara dan akan ditampilkan kembali pada tahap checkout.</p>
+        <p class="mt-4 border-t border-slate-100 pt-3 text-xs leading-5 text-slate-500">Tarif kurir aktual dihitung di checkout setelah alamat dipilih.</p>
       </aside>
     </div>
   </div>

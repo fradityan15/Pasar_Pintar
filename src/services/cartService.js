@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 
 const FIELDS =
-  'id, quantity, product_id, products(id, name, slug, price, stock, is_active, umkm(id, name, slug), product_images(url, sort_order))'
+  'id, quantity, product_id, products(id, name, slug, price, stock, is_active, category_id, umkm(id, name, slug), product_images(url, sort_order))'
 
 export async function fetchCart() {
   const { data, error } = await supabase.from('cart_items').select(FIELDS).order('id')

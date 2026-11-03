@@ -2,12 +2,18 @@
 import { onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import ModalDialog from '@/components/ModalDialog.vue'
+import RajaOngkirAreaPicker from '@/components/RajaOngkirAreaPicker.vue'
 import { useAuthStore } from '@/stores/auth'
 import { listAddresses, saveAddress } from '@/services/orderService'
 import { deleteAddress, setDefaultAddress, updateAddress, updatePassword, updateProfile } from '@/services/accountService'
 import { applyAsUmkm, getMyUmkm } from '@/services/umkmPartnerService'
+import { loadMyLoyaltyWallet } from '@/services/loyaltyService'
+import { formatRupiah, formatTanggalJam } from '@/lib/format'
 
 const auth = useAuthStore()
+const loyaltyWallet = ref(null)
+const loyaltyLoading = ref(true)
+const loyaltyError = ref('')
 const myUmkm = ref(null)
 const umkmLoading = ref(true)
 const umkmError = ref('')
@@ -25,6 +31,18 @@ async function loadMyUmkm() {
     umkmError.value = e.message
   } finally {
     umkmLoading.value = false
+  }
+}
+
+async function loadLoyalty() {
+  loyaltyLoading.value = true
+  loyaltyError.value = ''
+  try {
+    loyaltyWallet.value = await loadMyLoyaltyWallet()
+  } catch (e) {
+    loyaltyError.value = e.message || 'Saldo poin belum dapat dimuat.'
+  } finally {
+    loyaltyLoading.value = false
   }
 }
 
@@ -87,7 +105,7 @@ const open = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
 const formErr = ref('')
-const blank = () => ({ label: 'Rumah', recipient_name: auth.profile?.full_name ?? '', phone: auth.profile?.phone ?? '', province: '', city: '', street: '', postal_code: '' })
+const blank = () => ({ label: 'Rumah', recipient_name: auth.profile?.full_name ?? '', phone: auth.profile?.phone ?? '', province: '', city: '', street: '', postal_code: '', rajaongkir_area_id: '' })
 const form = reactive(blank())
 
 async function load() {
@@ -98,12 +116,13 @@ async function load() {
 onMounted(() => {
   load()
   loadMyUmkm()
+  loadLoyalty()
 })
 
 function bukaForm(a = null) {
   editingId.value = a?.id ?? null
   Object.assign(form, a
-    ? { label: a.label, recipient_name: a.recipient_name, phone: a.phone, province: a.province, city: a.city, street: a.street, postal_code: a.postal_code ?? '' }
+    ? { label: a.label, recipient_name: a.recipient_name, phone: a.phone, province: a.province, city: a.city, street: a.street, postal_code: a.postal_code ?? '', rajaongkir_area_id: a.rajaongkir_area_id ?? '' }
     : blank())
   formErr.value = ''
   open.value = true
@@ -113,7 +132,10 @@ async function simpanAlamat() {
   saving.value = true
   formErr.value = ''
   try {
-    const fields = { ...form, postal_code: form.postal_code.trim() || null }
+    if (!form.rajaongkir_area_id.trim()) {
+      throw new Error('Pilih wilayah pengiriman dari hasil pencarian RajaOngkir.')
+    }
+    const fields = { ...form, postal_code: form.postal_code.trim() || null, rajaongkir_area_id: form.rajaongkir_area_id.trim() || null }
     if (editingId.value) await updateAddress(editingId.value, fields)
     else await saveAddress(auth.user.id, fields, addresses.value.length === 0)
     open.value = false
@@ -139,6 +161,38 @@ async function hapus(a) {
 <template>
   <div class="mx-auto max-w-3xl px-4 pb-16 pt-8 md:px-6 lg:px-8">
     <h1 class="text-3xl font-bold">Akun saya</h1>
+
+    <section class="card mt-6 p-5" aria-labelledby="loyalty-title">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 id="loyalty-title" class="text-base font-semibold">Poin loyalitas</h2>
+          <p class="mt-1 text-sm text-muted">Poin diperoleh setelah pesanan selesai dan dapat ditukar saat checkout.</p>
+        </div>
+        <p v-if="!loyaltyLoading && loyaltyWallet" class="text-2xl font-bold text-indigo-700">{{ loyaltyWallet.balance }} poin</p>
+      </div>
+      <div v-if="loyaltyLoading" class="mt-4 h-16 animate-pulse rounded-xl bg-surface"></div>
+      <p v-else-if="loyaltyError" class="mt-4 rounded-xl bg-bad-bg p-3 text-sm text-bad-fg" role="alert">
+        {{ loyaltyError }} <button class="font-semibold underline" type="button" @click="loadLoyalty">Coba lagi</button>
+      </p>
+      <template v-else-if="loyaltyWallet">
+        <p class="mt-2 text-xs text-muted">
+          {{ loyaltyWallet.settings.earn_points_per_step }} poin per {{ formatRupiah(loyaltyWallet.settings.earn_amount_step) }} belanja ·
+          {{ formatRupiah(loyaltyWallet.settings.redemption_value) }} per poin
+        </p>
+        <p v-if="!loyaltyWallet.entries.length" class="mt-4 rounded-xl border border-dashed border-line p-4 text-sm text-muted">Belum ada riwayat poin.</p>
+        <div v-else class="mt-4 max-h-72 overflow-auto">
+          <ul class="divide-y divide-line">
+            <li v-for="entry in loyaltyWallet.entries" :key="entry.id" class="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
+              <span>
+                <span class="font-medium">{{ { earn: 'Poin pesanan selesai', redeem: 'Penukaran poin', expire: 'Poin kedaluwarsa', reverse: 'Penyesuaian/refund' }[entry.entry_type] }}</span>
+                <span class="mt-0.5 block text-xs text-muted">{{ formatTanggalJam(entry.created_at) }}<span v-if="entry.order_id"> · Pesanan {{ entry.order_id }}</span></span>
+              </span>
+              <span class="font-semibold" :class="entry.points > 0 ? 'text-ok-fg' : 'text-slate-700'">{{ entry.points > 0 ? '+' : '' }}{{ entry.points }} poin</span>
+            </li>
+          </ul>
+        </div>
+      </template>
+    </section>
 
     <section class="card mt-6 p-5">
       <h2 class="text-base font-semibold">Profil</h2>
@@ -251,6 +305,10 @@ async function hapus(a) {
       <div><label for="m-prov" class="mb-1 block text-sm font-medium">Provinsi</label><input id="m-prov" v-model="form.province" class="input" required /></div>
       <div><label for="m-kota" class="mb-1 block text-sm font-medium">Kota/Kabupaten</label><input id="m-kota" v-model="form.city" class="input" required /></div>
       <div><label for="m-pos" class="mb-1 block text-sm font-medium">Kode pos</label><input id="m-pos" v-model="form.postal_code" class="input" inputmode="numeric" /></div>
+      <div class="sm:col-span-2">
+        <RajaOngkirAreaPicker id="m-area" v-model="form.rajaongkir_area_id" />
+        <p class="mt-1 text-xs text-slate-500">Diperlukan agar checkout dapat meminta tarif pengiriman aktual.</p>
+      </div>
       <div class="sm:col-span-2"><label for="m-jalan" class="mb-1 block text-sm font-medium">Alamat lengkap</label><input id="m-jalan" v-model="form.street" class="input" required /></div>
       <p v-if="formErr" class="rounded-xl bg-bad-bg p-3 text-sm text-bad-fg sm:col-span-2" role="alert">{{ formErr }}</p>
       <div class="flex justify-end gap-2 sm:col-span-2">

@@ -12,7 +12,7 @@ export const listActivePaymentMethods = async () =>
   unwrap(
     await supabase
       .from('payment_methods')
-      .select('id, name, category, account_number, account_name, qr_image_url')
+      .select('id, name, category, account_number, account_name, qr_image_url, provider, provider_method')
       .eq('is_active', true)
       .order('name'),
   )
@@ -28,16 +28,20 @@ export async function saveAddress(userId, a, makeDefault) {
 }
 
 // Checkout atomik di database: cek stok, buat pesanan, kurangi stok, kosongkan keranjang.
-export async function createOrder(addressId, paymentMethodId, productIds = null, shippingMethod = 'regular') {
+export async function createOrder(addressId, paymentMethodId, productIds, shippingQuoteId, shippingOptionId, voucherClaimId = null, redeemPoints = 0) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(paymentMethodId ?? '')) {
     throw new Error('Pilih metode pembayaran yang valid.')
   }
+  if (!shippingQuoteId || !shippingOptionId) throw new Error('Pilih tarif pengiriman yang tersedia.')
 
   return unwrap(await supabase.rpc('create_order', {
     p_address_id: addressId,
     p_payment_method_id: paymentMethodId,
     p_product_ids: productIds,
-    p_shipping_method: shippingMethod,
+    p_shipping_quote_id: shippingQuoteId,
+    p_shipping_option_id: shippingOptionId,
+    p_voucher_claim_id: voucherClaimId,
+    p_redeem_points: redeemPoints,
   }))
 }
 
@@ -63,9 +67,22 @@ export async function getOrder(id, userId) {
   return unwrap(
     await supabase
       .from('orders')
-      .select('*, payment_methods(name, category, account_number, account_name, qr_image_url), order_items(id, product_id, product_name, unit_price, quantity, seller_shipping_status, products(product_images(url, sort_order)))')
+      .select('*, payment_methods(name, category, account_number, account_name, qr_image_url, provider, provider_method), order_items(id, product_id, product_name, unit_price, quantity, seller_shipping_status, products(product_images(url, sort_order)))')
       .eq('id', id)
       .eq('user_id', userId)
+      .maybeSingle(),
+  )
+}
+
+export async function getLatestPayment(orderId) {
+  return unwrap(
+    await supabase
+      .from('payments')
+      .select('id, method, amount, status, instructions, expires_at, created_at')
+      .eq('order_id', orderId)
+      .eq('provider', 'midtrans')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle(),
   )
 }

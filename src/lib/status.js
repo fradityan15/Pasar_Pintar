@@ -18,4 +18,3 @@ export const PAYMENT_METHOD = {
 }
 
 // Harus sama dengan v_shipping di fungsi create_order (supabase/migrations/003_functions.sql).
-export const FLAT_SHIPPING = 15000

@@ -47,3 +47,9 @@ export async function getOrderAdmin(id) {
 
 export const confirmOrderPaymentAdmin = (id, note = null) =>
   rpc('admin_confirm_order_payment', { p_order_id: id, p_note: note })
+
+export const listAdminPaymentNotifications = () =>
+  rpc('admin_list_payment_notifications')
+
+export const markAdminPaymentNotificationRead = (id) =>
+  rpc('admin_mark_payment_notification_read', { p_notification_id: id })

@@ -11,14 +11,21 @@ const props = defineProps({
 })
 
 const logs = ref([])
+const shipments = ref([])
+const shipmentEvents = ref([])
 const loading = ref(true)
 const error = ref('')
+const shippingError = ref('')
 let requestId = 0
 
 async function load() {
   const currentRequest = ++requestId
   loading.value = true
   error.value = ''
+  shippingError.value = ''
+  logs.value = []
+  shipments.value = []
+  shipmentEvents.value = []
   try {
     let result
     if (props.userRole === 'seller') {
@@ -35,6 +42,29 @@ async function load() {
     if (currentRequest === requestId) logs.value = result.data ?? []
   } catch (e) {
     if (currentRequest === requestId) error.value = e.message
+  }
+  try {
+    const [trackingResult, shipmentResult] = await Promise.all([
+      supabase.functions.invoke('shipping-track', { body: { order_id: props.orderId } }),
+      supabase.from('order_items')
+        .select('courier, courier_service, tracking_number')
+        .eq('order_id', props.orderId),
+    ])
+    if (trackingResult.error) throw new Error(trackingResult.error.message)
+    if (shipmentResult.error) throw new Error(shipmentResult.error.message)
+    if (currentRequest === requestId) {
+      const uniqueShipments = new Map()
+      for (const shipment of shipmentResult.data ?? []) {
+        if (shipment.courier && shipment.tracking_number) {
+          uniqueShipments.set(`${shipment.courier}:${shipment.tracking_number}`, shipment)
+        }
+      }
+      shipments.value = [...uniqueShipments.values()]
+      shipmentEvents.value = trackingResult.data?.events ?? []
+      shippingError.value = uniqueShipments.size ? trackingResult.data?.warning ?? '' : ''
+    }
+  } catch (e) {
+    if (currentRequest === requestId) shippingError.value = e.message
   } finally {
     if (currentRequest === requestId) loading.value = false
   }
@@ -116,5 +146,32 @@ function statusColor(status) {
         </div>
       </li>
     </ol>
+    <div v-if="!loading && (shipments.length || shippingError)" class="mt-6 border-t border-slate-100 pt-5">
+      <h3 class="font-semibold text-slate-900">Pengiriman & pelacakan kurir</h3>
+      <p v-if="shippingError" class="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="status">
+        {{ shippingError }}
+      </p>
+      <div v-for="shipment in shipments" :key="`${shipment.courier}:${shipment.tracking_number}`" class="mt-3 rounded-lg border border-slate-200 p-3">
+        <p class="text-sm font-semibold text-slate-900">{{ shipment.courier.toUpperCase() }} · {{ shipment.courier_service || 'Layanan kurir' }}</p>
+        <p class="mt-1 text-sm text-slate-600">Nomor resi: <span class="font-mono font-medium text-slate-900">{{ shipment.tracking_number }}</span></p>
+        <p v-if="shipment.tracking_number.startsWith('DEMO-')" class="mt-2 rounded-md bg-amber-50 p-2 text-xs text-amber-800">
+          Resi demo untuk presentasi. Nomor dan status ini tidak terhubung ke pelacakan kurir sungguhan.
+        </p>
+      </div>
+      <ol v-if="shipmentEvents.length" class="mt-4 border-l border-slate-200 pl-4">
+        <li v-for="event in shipmentEvents" :key="event.id" class="relative pb-4 last:pb-0">
+          <span class="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-indigo-600 ring-4 ring-indigo-50" aria-hidden="true"></span>
+          <div class="flex flex-wrap justify-between gap-2">
+            <p class="text-sm font-semibold text-slate-900">{{ event.status }}</p>
+            <time class="text-xs text-slate-500">{{ formatTanggalJam(event.occurred_at) }}</time>
+          </div>
+          <p v-if="event.description" class="mt-1 text-sm text-slate-600">{{ event.description }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ event.courier.toUpperCase() }} · {{ event.tracking_number }}</p>
+        </li>
+      </ol>
+      <p v-else-if="shipments.length && !shippingError" class="mt-3 text-sm text-slate-500">
+        Belum ada peristiwa pelacakan dari kurir. Muat ulang kembali nanti.
+      </p>
+    </div>
   </section>
 </template>

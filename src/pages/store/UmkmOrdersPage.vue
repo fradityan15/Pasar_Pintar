@@ -15,6 +15,7 @@ const notice = ref('')
 const busyOrderId = ref(null)
 const expandedOrderId = ref(null)
 const trackingRefresh = ref(0)
+const trackingNumbers = ref({})
 const canManageOrders = computed(() => umkm.value?.status === 'active' && umkm.value.is_active)
 
 async function load() {
@@ -32,12 +33,23 @@ async function load() {
 
 onMounted(load)
 
+function isiResiDemo(orderId) {
+  trackingNumbers.value[orderId] = `DEMO-${crypto.randomUUID().slice(0, 8).toUpperCase()}`
+}
+
 async function ubahStatus(order, action, successMessage) {
   busyOrderId.value = order.order_id
   error.value = ''
   notice.value = ''
   try {
-    await action(order.order_id, umkm.value.id)
+    if (action === shipSellerOrder) {
+      const trackingNumber = trackingNumbers.value[order.order_id]?.trim()
+      if (!trackingNumber) throw new Error('Masukkan nomor resi sebelum mengirim pesanan.')
+      await action(order.order_id, umkm.value.id, order.courier, trackingNumber)
+      trackingNumbers.value[order.order_id] = ''
+    } else {
+      await action(order.order_id, umkm.value.id)
+    }
     notice.value = `Pesanan ${order.order_no} ${successMessage}.`
     trackingRefresh.value++
     await load()
@@ -137,13 +149,37 @@ async function ubahStatus(order, action, successMessage) {
                           :disabled="busyOrderId === order.order_id"
                           @click="ubahStatus(order, processSellerOrder, 'mulai diproses')"
                         >{{ busyOrderId === order.order_id ? 'Memproses...' : 'Terima & Proses Pesanan' }}</button>
-                        <button
+                        <div
                           v-else
-                          class="rounded-lg bg-gray-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-black disabled:cursor-wait disabled:opacity-60"
-                          type="button"
-                          :disabled="busyOrderId === order.order_id"
-                          @click="ubahStatus(order, shipSellerOrder, 'ditandai sudah dikirim')"
-                        >{{ busyOrderId === order.order_id ? 'Memproses...' : 'Kirim Pesanan' }}</button>
+                          class="flex min-w-48 flex-col gap-1.5"
+                        >
+                          <label :for="`tracking-${order.order_id}`" class="text-[11px] text-slate-600">
+                            Kurir: {{ order.courier || 'tidak tersedia' }} · {{ order.courier_service || 'layanan' }}
+                          </label>
+                          <input
+                            :id="`tracking-${order.order_id}`"
+                            v-model="trackingNumbers[order.order_id]"
+                            class="w-40 rounded-lg border border-slate-300 px-2.5 py-2 text-xs"
+                            maxlength="40"
+                            pattern="[A-Za-z0-9-]{6,40}"
+                            placeholder="Nomor resi"
+                            required
+                            :disabled="busyOrderId === order.order_id || !order.courier || order.courier === 'multiple'"
+                          />
+                          <button
+                            class="self-start text-[11px] font-semibold text-amber-700 underline decoration-amber-400 underline-offset-2 hover:text-amber-900"
+                            type="button"
+                            :disabled="busyOrderId === order.order_id || !order.courier || order.courier === 'multiple'"
+                            @click="isiResiDemo(order.order_id)"
+                          >Isi resi demo</button>
+                          <p class="max-w-48 text-[10px] leading-4 text-amber-700">Hanya untuk presentasi; resi ini tidak bisa dilacak di kurir asli.</p>
+                          <button
+                            class="rounded-lg bg-gray-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-black disabled:cursor-wait disabled:opacity-60"
+                            type="button"
+                            :disabled="busyOrderId === order.order_id || !order.courier || order.courier === 'multiple' || !trackingNumbers[order.order_id]?.trim()"
+                            @click="ubahStatus(order, shipSellerOrder, 'ditandai sudah dikirim')"
+                          >{{ busyOrderId === order.order_id ? 'Memproses...' : 'Kirim Pesanan' }}</button>
+                        </div>
                       </div>
                       <span v-else class="text-xs text-slate-400">—</span>
                     </div>

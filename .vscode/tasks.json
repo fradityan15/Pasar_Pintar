@@ -1,0 +1,122 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Supabase: Link staging project",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"supabase",
+				"link",
+				"--project-ref",
+				"${input:supabaseStagingProjectRef}"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase: Dry-run pending staging migrations",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"supabase",
+				"db",
+				"push",
+				"--dry-run",
+				"--linked"
+			],
+			"dependsOn": "Supabase: Link staging project",
+			"dependsOrder": "sequence",
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase: Repair STAGING history 001-034 (metadata only)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+			  "--yes",
+			  "supabase",
+			  "migration",
+			  "repair",
+			  "--status",
+			  "applied",
+			  "--linked",
+			  "001",
+			  "002",
+			  "003",
+			  "004",
+			  "005",
+			  "006",
+			  "007",
+			  "008",
+			  "009",
+			  "010",
+			  "011",
+			  "012",
+			  "013",
+			  "014",
+			  "015",
+			  "016",
+			  "017",
+			  "018",
+			  "019",
+			  "020",
+			  "021",
+			  "022",
+			  "023",
+			  "024",
+			  "025",
+			  "026",
+			  "027",
+			  "028",
+			  "029",
+			  "030",
+			  "031",
+			  "032",
+			  "033",
+			  "034"
+			],
+			"dependsOn": "Supabase: Link staging project",
+			"dependsOrder": "sequence",
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase: Push pending migrations to STAGING",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"supabase",
+				"db",
+				"push",
+				"--linked"
+			],
+			"dependsOn": "Supabase: Link staging project",
+			"dependsOrder": "sequence",
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase: Inspect STAGING migration history (read-only)",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"supabase",
+				"migration",
+				"list",
+				"--linked"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	],
+	"inputs": [
+		{
+			"id": "supabaseStagingProjectRef",
+			"type": "promptString",
+			"description": "Staging Supabase project ref (non-secret)",
+			"password": false
+		}
+	]
+}

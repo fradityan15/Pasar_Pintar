@@ -1,5 +1,6 @@
 -- PasarPintar · 004 · Pembatalan otomatis pesanan kedaluwarsa (opsional, tiap jam)
--- LANGKAH SEBELUM MENJALANKAN: Supabase Dashboard → Database → Extensions → cari "pg_cron" → aktifkan.
+-- Supabase menyediakan pg_cron sebagai extension yang dapat diaktifkan oleh role migrasi.
+create extension if not exists pg_cron;
 
 select cron.schedule(
   'expire-unpaid-orders',

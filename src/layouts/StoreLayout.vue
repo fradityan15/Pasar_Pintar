@@ -71,7 +71,7 @@ const initials = computed(() =>
 )
 const avatarUrl = computed(() => auth.user?.user_metadata?.avatar_url || auth.user?.user_metadata?.picture || '')
 const isSellerDashboard = computed(() =>
-  ['umkm-dashboard', 'umkm-products', 'umkm-orders', 'umkm-settings'].includes(String(route.name ?? '')),
+  ['umkm-dashboard', 'umkm-wallet', 'umkm-products', 'umkm-orders', 'umkm-settings'].includes(String(route.name ?? '')),
 )
 
 watch(
@@ -108,6 +108,22 @@ function dismissAccessNotice() {
   router.replace({ query })
 }
 
+async function retryProfileLoad() {
+  const loaded = await auth.loadProfile()
+  if (!loaded) return
+
+  const redirect = String(route.query.redirect ?? '')
+  if (redirect.startsWith('/') && !redirect.startsWith('//')) {
+    await router.replace(redirect)
+    return
+  }
+
+  const query = { ...route.query }
+  delete query.profileError
+  delete query.redirect
+  await router.replace({ query })
+}
+
 function cari() {
   const q = search.value.trim()
   router.push({ name: 'katalog', query: q ? { q } : {} })
@@ -142,291 +158,569 @@ function persistReadItems(items, storageKey) {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col" :class="isSellerDashboard ? 'bg-white' : 'bg-slate-50'">
+  <div
+    class="flex min-h-screen flex-col"
+    :class="isSellerDashboard ? 'bg-white' : 'bg-slate-50'"
+  >
     <div :class="isSellerDashboard ? '' : 'sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm'">
-    <div class="bg-ink px-4 text-white">
-      <div class="relative mx-auto flex min-h-9 max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 py-1 text-xs sm:px-10">
-        <p class="hidden text-white/80 sm:block">Produk khas daerah, langsung dari UMKM Indonesia</p>
-        <div class="flex items-center gap-1">
-          <nav class="hidden items-center gap-1 lg:flex" aria-label="Menu utama">
-            <RouterLink
-              :to="{ name: 'home' }"
-              exact-active-class="bg-white/15 text-white"
-              class="rounded px-3 py-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-            >Beranda</RouterLink>
-            <RouterLink
-              :to="{ name: 'katalog' }"
-              active-class="bg-white/15 text-white"
-              class="rounded px-3 py-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-            >Katalog</RouterLink>
-            <RouterLink
-              :to="{ name: 'umkm' }"
-              active-class="bg-white/15 text-white"
-              class="rounded px-3 py-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-            >UMKM</RouterLink>
-          </nav>
-          <div v-if="auth.isLoggedIn" class="group relative ml-1 hidden lg:block">
-            <RouterLink
-              :to="{ name: 'akun' }"
-              class="flex items-center gap-2 rounded px-2 py-1 text-white/90 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              aria-haspopup="true"
-              aria-label="Menu profil pengguna"
+      <div class="bg-ink px-4 text-white">
+        <div class="relative mx-auto flex min-h-9 max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 py-1 text-xs sm:px-10">
+          <p class="hidden text-white/80 sm:block">
+            Produk khas daerah, langsung dari UMKM Indonesia
+          </p>
+          <div class="flex items-center gap-1">
+            <nav
+              class="hidden items-center gap-1 lg:flex"
+              aria-label="Menu utama"
             >
-              <span class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15 text-[11px] font-bold text-white ring-1 ring-white/30">
-                <img v-if="avatarUrl" :src="avatarUrl" alt="" class="h-full w-full object-cover" />
-                <span v-else>{{ initials }}</span>
-              </span>
-              <span class="hidden sm:inline">Halo, {{ firstName }}</span>
-              <svg viewBox="0 0 20 20" class="h-3 w-3" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.22 7.47a.75.75 0 0 1 1.06 0L10 11.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+              <RouterLink
+                :to="{ name: 'home' }"
+                exact-active-class="bg-white/15 text-white"
+                class="rounded px-3 py-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              >Beranda</RouterLink>
+              <RouterLink
+                :to="{ name: 'katalog' }"
+                active-class="bg-white/15 text-white"
+                class="rounded px-3 py-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              >Katalog</RouterLink>
+              <RouterLink
+                :to="{ name: 'umkm' }"
+                active-class="bg-white/15 text-white"
+                class="rounded px-3 py-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              >UMKM</RouterLink>
+            </nav>
+            <div
+              v-if="auth.isLoggedIn"
+              class="group relative ml-1 hidden lg:block"
+            >
+              <RouterLink
+                :to="{ name: 'akun' }"
+                class="flex items-center gap-2 rounded px-2 py-1 text-white/90 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                aria-haspopup="true"
+                aria-label="Menu profil pengguna"
+              >
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15 text-[11px] font-bold text-white ring-1 ring-white/30">
+                  <img
+                    v-if="avatarUrl"
+                    :src="avatarUrl"
+                    alt=""
+                    class="h-full w-full object-cover"
+                  >
+                  <span v-else>{{ initials }}</span>
+                </span>
+                <span class="hidden sm:inline">Halo, {{ firstName }}</span>
+                <svg
+                  viewBox="0 0 20 20"
+                  class="h-3 w-3"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.22 7.47a.75.75 0 0 1 1.06 0L10 11.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.53a.75.75 0 0 1 0-1.06Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </RouterLink>
+              <div class="invisible absolute right-0 top-full z-50 w-52 translate-y-1 rounded-xl border border-line bg-white p-1.5 text-sm text-gray-900 opacity-0 shadow-lg transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                <RouterLink
+                  :to="{ name: 'akun' }"
+                  class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="h-4 w-4 text-muted"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="8"
+                      r="3.5"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 20a7 7 0 0 1 14 0"
+                    />
+                  </svg>
+                  Akun Saya
+                </RouterLink>
+                <RouterLink
+                  :to="{ name: 'pesanan' }"
+                  class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="h-4 w-4 text-muted"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 8h14l1 12H4L5 8ZM9 8a3 3 0 0 1 6 0M8 12h.01M16 12h.01"
+                    />
+                  </svg>
+                  Pesanan
+                </RouterLink>
+                <RouterLink
+                  :to="{ name: 'voucher-saya' }"
+                  class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50"
+                >
+                  Voucher GBBI
+                </RouterLink>
+                <RouterLink
+                  v-if="myUmkm?.status === 'active' && myUmkm.is_active"
+                  :to="{ name: 'umkm-products' }"
+                  class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="h-4 w-4 text-muted"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3 10h18l-2 10H5L3 10ZM5 10l2-6h10l2 6M9 20v-5h6v5"
+                    />
+                  </svg>
+                  Dasbor Penjual
+                </RouterLink>
+                <p
+                  v-if="umkmCheckError"
+                  class="px-3 py-2 text-xs text-bad-fg"
+                  role="status"
+                >
+                  Status toko belum dapat diperiksa.
+                </p>
+                <RouterLink
+                  v-if="auth.isAdmin"
+                  :to="{ name: 'admin-dashboard' }"
+                  class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="h-4 w-4 text-muted"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4 13h6V4H4v9ZM14 20h6V11h-6v9ZM14 8h6V4h-6v4ZM4 20h6v-3H4v3Z"
+                    />
+                  </svg>
+                  Panel Admin
+                </RouterLink>
+                <div class="my-1 border-t border-line" />
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2.5 rounded-lg border border-gray-900 px-3 py-2.5 text-gray-900 hover:bg-gray-50 focus-visible:bg-gray-50"
+                  @click="keluar"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M10 17l5-5-5-5M15 12H3m9-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"
+                    />
+                  </svg>
+                  Keluar
+                </button>
+              </div>
+            </div>
+            <button
+              class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
+              type="button"
+              :aria-expanded="mobileMenuOpen"
+              aria-controls="mobile-navigation"
+              :aria-label="mobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'"
+              @click="mobileMenuOpen = !mobileMenuOpen"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path
+                  v-if="mobileMenuOpen"
+                  d="m6 6 12 12M18 6 6 18"
+                />
+                <path
+                  v-else
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
+            </button>
+          </div>
+          <nav
+            v-if="mobileMenuOpen"
+            id="mobile-navigation"
+            class="absolute inset-x-0 top-full z-50 mt-1 rounded-xl border border-line bg-white p-2 text-sm text-gray-900 shadow-lg lg:hidden"
+            aria-label="Navigasi mobile"
+          >
+            <RouterLink
+              v-for="item in [
+                { label: 'Beranda', to: { name: 'home' } },
+                { label: 'Katalog', to: { name: 'katalog' } },
+                { label: 'UMKM', to: { name: 'umkm' } },
+              ]"
+              :key="item.label"
+              :to="item.to"
+              class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
+              @click="mobileMenuOpen = false"
+            >
+              {{ item.label }}
             </RouterLink>
-            <div class="invisible absolute right-0 top-full z-50 w-52 translate-y-1 rounded-xl border border-line bg-white p-1.5 text-sm text-gray-900 opacity-0 shadow-lg transition duration-150 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-              <RouterLink :to="{ name: 'akun' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50">
-                <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                  <circle cx="12" cy="8" r="3.5" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 20a7 7 0 0 1 14 0" />
-                </svg>
-                Akun Saya
-              </RouterLink>
-              <RouterLink :to="{ name: 'pesanan' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50">
-                <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8ZM9 8a3 3 0 0 1 6 0M8 12h.01M16 12h.01" />
-                </svg>
-                Pesanan
-              </RouterLink>
+            <template v-if="auth.isLoggedIn">
+              <div class="my-1 border-t border-line" />
+              <RouterLink
+                :to="{ name: 'akun' }"
+                class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
+                @click="mobileMenuOpen = false"
+              >Akun Saya</RouterLink>
+              <RouterLink
+                :to="{ name: 'pesanan' }"
+                class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
+                @click="mobileMenuOpen = false"
+              >Pesanan</RouterLink>
+              <RouterLink
+                :to="{ name: 'voucher-saya' }"
+                class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
+                @click="mobileMenuOpen = false"
+              >Voucher GBBI</RouterLink>
               <RouterLink
                 v-if="myUmkm?.status === 'active' && myUmkm.is_active"
                 :to="{ name: 'umkm-products' }"
-                class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50"
+                class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
+                @click="mobileMenuOpen = false"
+              >Dasbor Penjual</RouterLink>
+              <RouterLink
+                v-if="auth.isAdmin"
+                :to="{ name: 'admin-dashboard' }"
+                class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
+                @click="mobileMenuOpen = false"
+              >Panel Admin</RouterLink>
+              <button
+                type="button"
+                class="block w-full rounded-lg border border-gray-900 px-3 py-2.5 text-left text-gray-900 hover:bg-gray-50"
+                @click="mobileMenuOpen = false; keluar()"
               >
-                <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18l-2 10H5L3 10ZM5 10l2-6h10l2 6M9 20v-5h6v5" />
-                </svg>
-                Dasbor Penjual
-              </RouterLink>
-              <p v-if="umkmCheckError" class="px-3 py-2 text-xs text-bad-fg" role="status">
-                Status toko belum dapat diperiksa.
-              </p>
-              <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin-dashboard' }" class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 hover:bg-gray-50 focus-visible:bg-gray-50">
-                <svg viewBox="0 0 24 24" class="h-4 w-4 text-muted" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 13h6V4H4v9ZM14 20h6V11h-6v9ZM14 8h6V4h-6v4ZM4 20h6v-3H4v3Z" />
-                </svg>
-                Panel Admin
-              </RouterLink>
-              <div class="my-1 border-t border-line"></div>
-              <button type="button" class="flex w-full items-center gap-2.5 rounded-lg border border-gray-900 px-3 py-2.5 text-gray-900 hover:bg-gray-50 focus-visible:bg-gray-50" @click="keluar">
-                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 17l5-5-5-5M15 12H3m9-8h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
-                </svg>
                 Keluar
               </button>
-            </div>
-          </div>
-          <button
-            class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
-            type="button"
-            :aria-expanded="mobileMenuOpen"
-            aria-controls="mobile-navigation"
-            :aria-label="mobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'"
-            @click="mobileMenuOpen = !mobileMenuOpen"
-          >
-            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-              <path v-if="mobileMenuOpen" d="m6 6 12 12M18 6 6 18" />
-              <path v-else d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+            </template>
+            <template v-else>
+              <div class="my-1 border-t border-line" />
+              <RouterLink
+                :to="{ name: 'login' }"
+                class="block rounded-lg px-3 py-2.5 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                @click="mobileMenuOpen = false"
+              >Masuk</RouterLink>
+              <RouterLink
+                :to="{ name: 'register' }"
+                class="block rounded-lg px-3 py-2.5 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                @click="mobileMenuOpen = false"
+              >Daftar</RouterLink>
+            </template>
+          </nav>
         </div>
-        <nav
-          v-if="mobileMenuOpen"
-          id="mobile-navigation"
-          class="absolute inset-x-0 top-full z-50 mt-1 rounded-xl border border-line bg-white p-2 text-sm text-gray-900 shadow-lg lg:hidden"
-          aria-label="Navigasi mobile"
-        >
-          <RouterLink v-for="item in [
-            { label: 'Beranda', to: { name: 'home' } },
-            { label: 'Katalog', to: { name: 'katalog' } },
-            { label: 'UMKM', to: { name: 'umkm' } },
-          ]" :key="item.label" :to="item.to" class="block rounded-lg px-3 py-2.5 hover:bg-gray-50" @click="mobileMenuOpen = false">
-            {{ item.label }}
-          </RouterLink>
-          <template v-if="auth.isLoggedIn">
-            <div class="my-1 border-t border-line"></div>
-            <RouterLink :to="{ name: 'akun' }" class="block rounded-lg px-3 py-2.5 hover:bg-gray-50" @click="mobileMenuOpen = false">Akun Saya</RouterLink>
-            <RouterLink :to="{ name: 'pesanan' }" class="block rounded-lg px-3 py-2.5 hover:bg-gray-50" @click="mobileMenuOpen = false">Pesanan</RouterLink>
-            <RouterLink
-              v-if="myUmkm?.status === 'active' && myUmkm.is_active"
-              :to="{ name: 'umkm-products' }"
-              class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
-              @click="mobileMenuOpen = false"
-            >Dasbor Penjual</RouterLink>
-            <RouterLink
-              v-if="auth.isAdmin"
-              :to="{ name: 'admin-dashboard' }"
-              class="block rounded-lg px-3 py-2.5 hover:bg-gray-50"
-              @click="mobileMenuOpen = false"
-            >Panel Admin</RouterLink>
-            <button type="button" class="block w-full rounded-lg border border-gray-900 px-3 py-2.5 text-left text-gray-900 hover:bg-gray-50" @click="mobileMenuOpen = false; keluar()">Keluar</button>
-          </template>
-          <template v-else>
-            <div class="my-1 border-t border-line"></div>
-            <RouterLink :to="{ name: 'login' }" class="block rounded-lg px-3 py-2.5 transition-colors hover:bg-gray-50 hover:text-gray-900" @click="mobileMenuOpen = false">Masuk</RouterLink>
-            <RouterLink :to="{ name: 'register' }" class="block rounded-lg px-3 py-2.5 transition-colors hover:bg-gray-50 hover:text-gray-900" @click="mobileMenuOpen = false">Daftar</RouterLink>
-          </template>
-        </nav>
       </div>
-    </div>
 
-    <header class="border-b border-line">
-      <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 md:gap-4 md:px-6 lg:flex-nowrap lg:px-8">
-        <RouterLink :to="{ name: 'home' }" class="flex shrink-0 items-center gap-2 text-xl font-bold">
-          <img src="/logo-pasarpintar.png" alt="" class="h-10 w-10 rounded-lg object-cover" />
-          PasarPintar
-        </RouterLink>
-
-        <form
-          class="order-3 flex min-w-0 w-full flex-1 rounded-lg border border-line bg-white p-1 focus-within:border-gray-900 focus-within:ring-2 focus-within:ring-gray-900/10 lg:order-none lg:mx-6 lg:max-w-3xl"
-          role="search"
-          @submit.prevent="cari"
-        >
-          <label for="header-search" class="sr-only">Cari produk</label>
-          <input
-            id="header-search"
-            v-model="search"
-            type="search"
-            placeholder="Cari produk"
-            class="min-w-0 flex-1 rounded-l-md bg-transparent px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-muted/70"
-          />
-          <button
-            type="submit"
-            class="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 px-4 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-            :class="isSellerDashboard
-              ? 'rounded-md bg-gray-900 hover:bg-black focus-visible:ring-gray-900'
-              : 'rounded-xl bg-gray-900 hover:bg-black hover:shadow-md focus-visible:ring-gray-900'"
-            aria-label="Cari produk"
-          >
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path stroke-linecap="round" d="m16 16 4 4" />
-            </svg>
-            <span>Cari</span>
-          </button>
-        </form>
-
-        <div class="relative ml-auto flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-6">
-          <button
-            type="button"
-            class="relative hidden h-11 w-11 items-center justify-center rounded-lg text-gray-900 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 sm:flex"
-            :aria-expanded="activeUtilityPanel === 'messages'"
-            aria-controls="navbar-utility-panel"
-            aria-label="Pesan"
-            title="Pesan"
-            @click="toggleUtilityPanel('messages')"
-          >
-            <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h16v11H9l-5 3v-14Z" />
-              <path stroke-linecap="round" d="M8 10h8M8 13.5h5" />
-            </svg>
-            <span v-if="unreadMessages" class="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold text-white">{{ unreadMessages }}</span>
-          </button>
-          <button
-            type="button"
-            class="relative hidden h-11 w-11 items-center justify-center rounded-lg text-gray-900 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 sm:flex"
-            :aria-expanded="activeUtilityPanel === 'notifications'"
-            aria-controls="navbar-utility-panel"
-            aria-label="Notifikasi"
-            title="Notifikasi"
-            @click="toggleUtilityPanel('notifications')"
-          >
-            <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
-            </svg>
-            <span v-if="unreadNotifications" class="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold text-white">{{ unreadNotifications }}</span>
-          </button>
+      <header class="border-b border-line">
+        <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 md:gap-4 md:px-6 lg:flex-nowrap lg:px-8">
           <RouterLink
-            to="/cart"
-            class="relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2"
-            :class="isSellerDashboard
-              ? 'text-gray-900 hover:bg-gray-50 hover:text-gray-700 focus-visible:ring-gray-900'
-              : 'text-gray-900 hover:bg-gray-50 focus-visible:ring-gray-900'"
-            aria-label="Keranjang"
+            :to="{ name: 'home' }"
+            class="flex shrink-0 items-center gap-2 text-xl font-bold"
           >
-            <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 1.9-1.4L22 8H6M10 21h.01M18 21h.01" />
-            </svg>
-            <span
-              v-if="cart.count > 0"
-              class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white ring-2 ring-white"
-            >{{ cart.count }}</span>
+            <img
+              src="/logo-pasarpintar.png"
+              alt=""
+              class="h-10 w-10 rounded-lg object-cover"
+            >
+            PasarPintar
           </RouterLink>
-          <template v-if="!auth.isLoggedIn">
-            <RouterLink
-              :to="{ name: 'login' }"
-              class="btn-outline hidden md:inline-flex"
-              :class="isSellerDashboard ? '' : 'border-gray-900 text-gray-900 hover:bg-gray-50'"
-            >Masuk</RouterLink>
-            <RouterLink
-              :to="{ name: 'register' }"
-              class="btn hidden md:inline-flex"
-              :class="isSellerDashboard ? 'bg-gray-900 text-white hover:bg-black' : 'bg-gray-900 text-white hover:bg-black'"
-            >Daftar</RouterLink>
-          </template>
-          <section
-            v-if="activeUtilityPanel"
-            id="navbar-utility-panel"
-            class="absolute right-0 top-full z-[60] mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white text-gray-900 shadow-xl"
-            :aria-label="utilityPanelTitle"
+
+          <form
+            class="order-3 flex min-w-0 w-full flex-1 rounded-lg border border-line bg-white p-1 focus-within:border-gray-900 focus-within:ring-2 focus-within:ring-gray-900/10 lg:order-none lg:mx-6 lg:max-w-3xl"
+            role="search"
+            @submit.prevent="cari"
           >
-            <header class="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
-              <div>
-                <h2 class="text-sm font-bold">{{ utilityPanelTitle }}</h2>
-                <p class="mt-0.5 text-xs text-gray-500">{{ activeUtilityPanel === 'messages' ? 'Percakapan dengan penjual dan PasarPintar' : 'Pembaruan aktivitas akun Anda' }}</p>
-              </div>
-              <button
-                v-if="currentUtilityItems.some((item) => !item.read)"
-                type="button"
-                class="rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                @click="markAllUtilityItemsRead"
-              >Tandai dibaca</button>
-              <button
-                type="button"
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg text-gray-600 hover:bg-gray-100"
-                aria-label="Tutup panel"
-                @click="activeUtilityPanel = ''"
-              >×</button>
-            </header>
-            <p v-if="storageNotice" class="border-b border-gray-100 bg-gray-50 px-4 py-2 text-xs text-gray-700" role="status">{{ storageNotice }}</p>
-            <ul class="max-h-80 divide-y divide-gray-100 overflow-y-auto">
-              <li v-for="item in currentUtilityItems" :key="item.id">
+            <label
+              for="header-search"
+              class="sr-only"
+            >Cari produk</label>
+            <input
+              id="header-search"
+              v-model="search"
+              type="search"
+              placeholder="Cari produk"
+              class="min-w-0 flex-1 rounded-l-md bg-transparent px-3 py-2 text-sm text-gray-900 outline-none placeholder:text-muted/70"
+            >
+            <button
+              type="submit"
+              class="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 px-4 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              :class="isSellerDashboard
+                ? 'rounded-md bg-gray-900 hover:bg-black focus-visible:ring-gray-900'
+                : 'rounded-xl bg-gray-900 hover:bg-black hover:shadow-md focus-visible:ring-gray-900'"
+              aria-label="Cari produk"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7"
+                />
+                <path
+                  stroke-linecap="round"
+                  d="m16 16 4 4"
+                />
+              </svg>
+              <span>Cari</span>
+            </button>
+          </form>
+
+          <div class="relative ml-auto flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-6">
+            <button
+              type="button"
+              class="relative hidden h-11 w-11 items-center justify-center rounded-lg text-gray-900 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 sm:flex"
+              :aria-expanded="activeUtilityPanel === 'messages'"
+              aria-controls="navbar-utility-panel"
+              aria-label="Pesan"
+              title="Pesan"
+              @click="toggleUtilityPanel('messages')"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4 5.5h16v11H9l-5 3v-14Z"
+                />
+                <path
+                  stroke-linecap="round"
+                  d="M8 10h8M8 13.5h5"
+                />
+              </svg>
+              <span
+                v-if="unreadMessages"
+                class="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold text-white"
+              >{{ unreadMessages }}</span>
+            </button>
+            <button
+              type="button"
+              class="relative hidden h-11 w-11 items-center justify-center rounded-lg text-gray-900 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 sm:flex"
+              :aria-expanded="activeUtilityPanel === 'notifications'"
+              aria-controls="navbar-utility-panel"
+              aria-label="Notifikasi"
+              title="Notifikasi"
+              @click="toggleUtilityPanel('notifications')"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
+                />
+              </svg>
+              <span
+                v-if="unreadNotifications"
+                class="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[9px] font-bold text-white"
+              >{{ unreadNotifications }}</span>
+            </button>
+            <RouterLink
+              to="/cart"
+              class="relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2"
+              :class="isSellerDashboard
+                ? 'text-gray-900 hover:bg-gray-50 hover:text-gray-700 focus-visible:ring-gray-900'
+                : 'text-gray-900 hover:bg-gray-50 focus-visible:ring-gray-900'"
+              aria-label="Keranjang"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 1.9-1.4L22 8H6M10 21h.01M18 21h.01"
+                />
+              </svg>
+              <span
+                v-if="cart.count > 0"
+                class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white ring-2 ring-white"
+              >{{ cart.count }}</span>
+            </RouterLink>
+            <template v-if="!auth.isLoggedIn">
+              <RouterLink
+                :to="{ name: 'login' }"
+                class="btn-outline hidden md:inline-flex"
+                :class="isSellerDashboard ? '' : 'border-gray-900 text-gray-900 hover:bg-gray-50'"
+              >Masuk</RouterLink>
+              <RouterLink
+                :to="{ name: 'register' }"
+                class="btn hidden md:inline-flex"
+                :class="isSellerDashboard ? 'bg-gray-900 text-white hover:bg-black' : 'bg-gray-900 text-white hover:bg-black'"
+              >Daftar</RouterLink>
+            </template>
+            <section
+              v-if="activeUtilityPanel"
+              id="navbar-utility-panel"
+              class="absolute right-0 top-full z-[60] mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white text-gray-900 shadow-xl"
+              :aria-label="utilityPanelTitle"
+            >
+              <header class="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
+                <div>
+                  <h2 class="text-sm font-bold">
+                    {{ utilityPanelTitle }}
+                  </h2>
+                  <p class="mt-0.5 text-xs text-gray-500">
+                    {{ activeUtilityPanel === 'messages' ? 'Percakapan dengan penjual dan PasarPintar' : 'Pembaruan aktivitas akun Anda' }}
+                  </p>
+                </div>
+                <button
+                  v-if="currentUtilityItems.some((item) => !item.read)"
+                  type="button"
+                  class="rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                  @click="markAllUtilityItemsRead"
+                >
+                  Tandai dibaca
+                </button>
                 <button
                   type="button"
-                  class="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
-                  :class="item.read ? 'bg-white' : 'bg-gray-50/70'"
-                  @click="markUtilityItemRead(item)"
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg text-gray-600 hover:bg-gray-100"
+                  aria-label="Tutup panel"
+                  @click="activeUtilityPanel = ''"
                 >
-                  <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" :class="item.read ? 'bg-gray-300' : 'bg-gray-900'" aria-hidden="true"></span>
-                  <span class="min-w-0 flex-1">
-                    <span class="block text-sm font-semibold">{{ activeUtilityPanel === 'messages' ? item.sender : item.title }}</span>
-                    <span class="mt-0.5 block text-xs leading-5 text-gray-600">{{ item.text }}</span>
-                    <span class="mt-1 block text-[11px] text-gray-500">{{ item.time }}</span>
-                  </span>
+                  ×
                 </button>
-              </li>
-            </ul>
-            <p v-if="!currentUtilityItems.length" class="px-4 py-8 text-center text-sm text-gray-500">Belum ada {{ activeUtilityPanel === 'messages' ? 'pesan' : 'notifikasi' }}.</p>
-            <footer class="border-t border-gray-100 px-4 py-2.5 text-center">
-              <button type="button" class="text-xs font-semibold text-gray-700 hover:text-black" @click="activeUtilityPanel = ''">Tutup</button>
-            </footer>
-          </section>
+              </header>
+              <p
+                v-if="storageNotice"
+                class="border-b border-gray-100 bg-gray-50 px-4 py-2 text-xs text-gray-700"
+                role="status"
+              >
+                {{ storageNotice }}
+              </p>
+              <ul class="max-h-80 divide-y divide-gray-100 overflow-y-auto">
+                <li
+                  v-for="item in currentUtilityItems"
+                  :key="item.id"
+                >
+                  <button
+                    type="button"
+                    class="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+                    :class="item.read ? 'bg-white' : 'bg-gray-50/70'"
+                    @click="markUtilityItemRead(item)"
+                  >
+                    <span
+                      class="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                      :class="item.read ? 'bg-gray-300' : 'bg-gray-900'"
+                      aria-hidden="true"
+                    />
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-sm font-semibold">{{ activeUtilityPanel === 'messages' ? item.sender : item.title }}</span>
+                      <span class="mt-0.5 block text-xs leading-5 text-gray-600">{{ item.text }}</span>
+                      <span class="mt-1 block text-[11px] text-gray-500">{{ item.time }}</span>
+                    </span>
+                  </button>
+                </li>
+              </ul>
+              <p
+                v-if="!currentUtilityItems.length"
+                class="px-4 py-8 text-center text-sm text-gray-500"
+              >
+                Belum ada {{ activeUtilityPanel === 'messages' ? 'pesan' : 'notifikasi' }}.
+              </p>
+              <footer class="border-t border-gray-100 px-4 py-2.5 text-center">
+                <button
+                  type="button"
+                  class="text-xs font-semibold text-gray-700 hover:text-black"
+                  @click="activeUtilityPanel = ''"
+                >
+                  Tutup
+                </button>
+              </footer>
+            </section>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
     </div>
 
     <main class="flex-1">
-      <div v-if="route.query.accessDenied === '1'" class="mx-auto mt-4 flex max-w-7xl items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+      <div
+        v-if="route.query.profileError === '1'"
+        class="mx-auto mt-4 flex max-w-7xl flex-wrap items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        role="alert"
+      >
+        <p>Profil Anda gagal dimuat. Periksa koneksi internet lalu coba lagi.</p>
+        <button
+          type="button"
+          class="shrink-0 font-semibold underline disabled:opacity-50"
+          :disabled="auth.profileLoading"
+          @click="retryProfileLoad"
+        >
+          {{ auth.profileLoading ? 'Memuat…' : 'Coba lagi' }}
+        </button>
+      </div>
+      <div
+        v-if="route.query.accessDenied === '1'"
+        class="mx-auto mt-4 flex max-w-7xl items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        role="alert"
+      >
         <p>Akses ditolak. Anda tidak memiliki hak untuk membuka halaman tersebut.</p>
-        <button type="button" class="shrink-0 font-semibold underline" @click="dismissAccessNotice">Tutup</button>
+        <button
+          type="button"
+          class="shrink-0 font-semibold underline"
+          @click="dismissAccessNotice"
+        >
+          Tutup
+        </button>
       </div>
       <RouterView />
     </main>
@@ -434,50 +728,140 @@ function persistReadItems(items, storageKey) {
     <footer class="bg-ink text-[#C9CBD1]">
       <div class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 sm:px-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
         <div>
-          <p class="text-2xl font-bold text-white">PasarPintar</p>
+          <p class="text-2xl font-bold text-white">
+            PasarPintar
+          </p>
           <p class="mt-4 max-w-xs text-sm leading-relaxed text-gray-400">
             Platform e-commerce yang membantu UMKM menjual produk khas daerah secara digital.
           </p>
           <div class="mt-5 flex flex-col gap-2 text-sm text-gray-400">
-            <a href="mailto:halo@pasarpintar.id" class="transition-colors duration-200 hover:text-white">Email: halo@pasarpintar.id</a>
-            <a href="https://wa.me/6281234567890" class="transition-colors duration-200 hover:text-white">WhatsApp: 0812-3456-7890</a>
+            <a
+              href="mailto:halo@pasarpintar.id"
+              class="transition-colors duration-200 hover:text-white"
+            >Email: halo@pasarpintar.id</a>
+            <a
+              href="https://wa.me/6281234567890"
+              class="transition-colors duration-200 hover:text-white"
+            >WhatsApp: 0812-3456-7890</a>
           </div>
         </div>
         <div>
-          <h2 class="mb-4 font-semibold text-white">Belanja</h2>
+          <h2 class="mb-4 font-semibold text-white">
+            Belanja
+          </h2>
           <div class="flex flex-col gap-3 text-sm text-gray-400">
-            <RouterLink :to="{ name: 'katalog' }" class="transition-colors duration-200 hover:text-white">Katalog</RouterLink>
-            <RouterLink :to="{ name: 'umkm' }" class="transition-colors duration-200 hover:text-white">Kategori UMKM</RouterLink>
-            <RouterLink :to="{ name: 'katalog' }" class="transition-colors duration-200 hover:text-white">Promo Terbaru</RouterLink>
-            <RouterLink :to="{ name: 'katalog' }" class="transition-colors duration-200 hover:text-white">Produk Populer</RouterLink>
+            <RouterLink
+              :to="{ name: 'katalog' }"
+              class="transition-colors duration-200 hover:text-white"
+            >Katalog</RouterLink>
+            <RouterLink
+              :to="{ name: 'umkm' }"
+              class="transition-colors duration-200 hover:text-white"
+            >Kategori UMKM</RouterLink>
+            <RouterLink
+              :to="{ name: 'katalog' }"
+              class="transition-colors duration-200 hover:text-white"
+            >Promo Terbaru</RouterLink>
+            <RouterLink
+              :to="{ name: 'katalog' }"
+              class="transition-colors duration-200 hover:text-white"
+            >Produk Populer</RouterLink>
           </div>
         </div>
         <div>
-          <h2 class="mb-4 font-semibold text-white">Bantuan &amp; Informasi</h2>
+          <h2 class="mb-4 font-semibold text-white">
+            Bantuan &amp; Informasi
+          </h2>
           <div class="flex flex-col gap-3 text-sm text-gray-400">
-            <RouterLink :to="{ name: 'home' }" class="transition-colors duration-200 hover:text-white">Tentang Kami</RouterLink>
-            <a href="mailto:halo@pasarpintar.id?subject=Pusat%20Bantuan" class="transition-colors duration-200 hover:text-white">Pusat Bantuan (FAQ)</a>
-            <a href="mailto:halo@pasarpintar.id?subject=Syarat%20dan%20Ketentuan" class="transition-colors duration-200 hover:text-white">Syarat &amp; Ketentuan</a>
-            <a href="mailto:halo@pasarpintar.id?subject=Kebijakan%20Privasi" class="transition-colors duration-200 hover:text-white">Kebijakan Privasi</a>
+            <RouterLink
+              :to="{ name: 'home' }"
+              class="transition-colors duration-200 hover:text-white"
+            >Tentang Kami</RouterLink>
+            <a
+              href="mailto:halo@pasarpintar.id?subject=Pusat%20Bantuan"
+              class="transition-colors duration-200 hover:text-white"
+            >Pusat Bantuan (FAQ)</a>
+            <a
+              href="mailto:halo@pasarpintar.id?subject=Syarat%20dan%20Ketentuan"
+              class="transition-colors duration-200 hover:text-white"
+            >Syarat &amp; Ketentuan</a>
+            <a
+              href="mailto:halo@pasarpintar.id?subject=Kebijakan%20Privasi"
+              class="transition-colors duration-200 hover:text-white"
+            >Kebijakan Privasi</a>
           </div>
         </div>
         <div>
-          <h2 class="mb-4 font-semibold text-white">Ikuti Kami</h2>
+          <h2 class="mb-4 font-semibold text-white">
+            Ikuti Kami
+          </h2>
           <div class="flex items-center gap-3">
-            <span role="img" aria-label="Instagram" title="Instagram" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-gray-300 transition-colors duration-200 hover:bg-white/20 hover:text-white">
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="5" />
-                <circle cx="12" cy="12" r="4" />
-                <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
+            <span
+              role="img"
+              aria-label="Instagram"
+              title="Instagram"
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-gray-300 transition-colors duration-200 hover:bg-white/20 hover:text-white"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
+              >
+                <rect
+                  x="3"
+                  y="3"
+                  width="18"
+                  height="18"
+                  rx="5"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="4"
+                />
+                <circle
+                  cx="18"
+                  cy="6"
+                  r="1"
+                  fill="currentColor"
+                  stroke="none"
+                />
               </svg>
             </span>
-            <span role="img" aria-label="Facebook" title="Facebook" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-gray-300 transition-colors duration-200 hover:bg-white/20 hover:text-white">
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="currentColor" aria-hidden="true">
+            <span
+              role="img"
+              aria-label="Facebook"
+              title="Facebook"
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-gray-300 transition-colors duration-200 hover:bg-white/20 hover:text-white"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="currentColor"
+                aria-hidden="true"
+              >
                 <path d="M13.4 21v-8.2h2.8l.4-3.2h-3.2v-2c0-.9.3-1.5 1.6-1.5h1.7V3.2c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.2H7.2v3.2H10V21h3.4Z" />
               </svg>
             </span>
-            <span role="img" aria-label="TikTok" title="TikTok" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-gray-300 transition-colors duration-200 hover:bg-white/20 hover:text-white">
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <span
+              role="img"
+              aria-label="TikTok"
+              title="TikTok"
+              class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-gray-300 transition-colors duration-200 hover:bg-white/20 hover:text-white"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M14 4v10.2a4 4 0 1 1-3-3.9M14 7c1 2 2.8 3.2 5 3.4" />
               </svg>
             </span>

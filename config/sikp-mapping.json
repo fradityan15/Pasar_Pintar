@@ -1,0 +1,18 @@
+[
+  {
+    "header": "PLACEHOLDER_ORDER_REFERENCE",
+    "source": "order_no"
+  },
+  {
+    "header": "PLACEHOLDER_PAYMENT_DATE",
+    "source": "paid_date"
+  },
+  {
+    "header": "PLACEHOLDER_ORDER_TOTAL",
+    "source": "order_total"
+  },
+  {
+    "header": "PLACEHOLDER_UMKM_NAMES",
+    "source": "umkm_names"
+  }
+]
