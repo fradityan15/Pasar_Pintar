@@ -27,6 +27,7 @@ const menu = [
   { label: 'Produk', to: { name: 'admin-produk' }, icon: 'M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8' },
   { label: 'Kategori', to: { name: 'admin-kategori' }, icon: 'M4 4h7l9 9-7 7-9-9z' },
   { label: 'UMKM', to: { name: 'admin-umkm' }, icon: 'M4 10l1-5h14l1 5M5 10v10h14V10M9 20v-5h6v5' },
+  { label: 'Pesan Penjual', to: { name: 'admin-pesan-penjual' }, icon: 'M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z' },
   { label: 'Keuangan', to: { name: 'admin-keuangan' }, icon: 'M3 7h18v13H3zM3 7l2-3h14l2 3M16 13h2M7 11h4' },
   { label: 'Voucher GBBI', to: { name: 'admin-voucher-gbbi' }, icon: 'M20 12v8H4v-8m16 0V8H4v4m16 0H4m8 0v8m0-12a2.5 2.5 0 1 0-5 0h5Zm0 0a2.5 2.5 0 1 1 5 0h-5Z' },
   { label: 'Pengguna', to: { name: 'admin-pengguna' }, icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c1-4 4-6 8-6s7 2 8 6' },

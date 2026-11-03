@@ -39,13 +39,13 @@ describe('router access guards', () => {
     expect(router.currentRoute.value.query.redirect).toBe('/akun')
   })
 
-  it('allows an authenticated UMKM owner to open the seller dashboard', async () => {
+  it('allows an authenticated UMKM owner to open admin chat', async () => {
     setAuth({ loggedIn: true })
     mocks.getMyUmkm.mockResolvedValue({ id: 'umkm-1', status: 'active' })
 
-    await router.push('/mitra/pesanan')
+    await router.push('/mitra/chat-admin')
 
-    expect(router.currentRoute.value.name).toBe('umkm-orders')
+    expect(router.currentRoute.value.name).toBe('umkm-admin-chat')
     expect(mocks.getMyUmkm).toHaveBeenCalled()
   })
 
@@ -58,12 +58,12 @@ describe('router access guards', () => {
     expect(router.currentRoute.value.query.accessDenied).toBe('1')
   })
 
-  it('allows an admin to open the admin dashboard', async () => {
+  it('allows an admin to open seller messages', async () => {
     setAuth({ loggedIn: true, admin: true })
 
-    await router.push('/admin/ringkasan')
+    await router.push('/admin/pesan-penjual')
 
-    expect(router.currentRoute.value.name).toBe('admin-dashboard')
+    expect(router.currentRoute.value.name).toBe('admin-pesan-penjual')
   })
 
   it('blocks a non-admin from admin pages', async () => {

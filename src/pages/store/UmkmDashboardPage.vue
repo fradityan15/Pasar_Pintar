@@ -19,13 +19,20 @@ const payoutSummary = ref({ paid_payout_total: 0, paid_payout_count: 0, last_pai
 const loading = ref(true)
 const error = ref('')
 let payoutRefreshTimer
+let ordersRefreshTimer
 const canManage = computed(() => umkm.value?.status === 'active' && umkm.value.is_active)
 const recentOrders = computed(() => orders.value
   .filter((order) => order.seller_shipping_status === 'menunggu_diproses'
     && (order.payment_status === 'dibayar' || order.payment_category === 'cod'))
   .slice(0, 5))
 const totalIncome = computed(() => Number(metrics.value?.total_pendapatan ?? 0))
-const pendingOrders = computed(() => Number(metrics.value?.pesanan_baru ?? 0))
+const pendingOrders = computed(() => orders.value.filter((order) => (
+  order.status === 'menunggu_pembayaran'
+  || (
+    ['menunggu_diproses', 'diproses'].includes(order.status)
+    && order.seller_shipping_status === 'menunggu_diproses'
+  )
+)).length)
 const activeProducts = computed(() => products.value.filter((product) => product.is_active).length)
 const categoryChartData = computed(() => {
   const counts = new Map()
@@ -162,13 +169,33 @@ async function refreshPayoutSummary() {
   }
 }
 
+async function refreshOrders() {
+  if (!umkm.value?.id || !canManage.value || loading.value || document.hidden) return
+  try {
+    orders.value = await listSellerOrders(umkm.value.id)
+  } catch (loadError) {
+    error.value = loadError.message || 'Pesanan terbaru tidak dapat dimuat.'
+  }
+}
+
+function refreshWhenVisible() {
+  if (!document.hidden) {
+    refreshOrders()
+    refreshPayoutSummary()
+  }
+}
+
 onMounted(() => {
   load()
+  ordersRefreshTimer = window.setInterval(refreshOrders, 10_000)
   payoutRefreshTimer = window.setInterval(refreshPayoutSummary, 30_000)
+  document.addEventListener('visibilitychange', refreshWhenVisible)
 })
 
 onBeforeUnmount(() => {
+  window.clearInterval(ordersRefreshTimer)
   window.clearInterval(payoutRefreshTimer)
+  document.removeEventListener('visibilitychange', refreshWhenVisible)
 })
 </script>
 
@@ -289,11 +316,11 @@ onBeforeUnmount(() => {
               <div class="flex items-start justify-between gap-3">
                 <div>
                   <p class="text-sm font-medium text-slate-500">
-                    Pesanan Masuk
+                    Pesanan Checkout
                   </p><p class="mt-3 text-3xl font-bold tracking-tight text-slate-900">
                     {{ pendingOrders }}
                   </p><p class="mt-1 text-xs text-slate-500">
-                    Menunggu diproses
+                    Menunggu pembayaran atau diproses
                   </p>
                 </div>
                 <span class="rounded-xl bg-amber-50 p-3 text-amber-700"><svg

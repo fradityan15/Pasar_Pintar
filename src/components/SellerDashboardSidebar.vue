@@ -10,6 +10,7 @@ const route = useRoute()
 const mobileMenuOpen = ref(false)
 const activeItem = computed(() => {
   if (route.name === 'umkm-orders') return 'orders'
+  if (route.name === 'umkm-admin-chat') return 'chat'
   if (route.name === 'umkm-wallet') return 'wallet'
   if (route.name === 'umkm-settings') return 'settings'
   if (route.name === 'umkm-dashboard') return 'overview'
@@ -96,6 +97,12 @@ const linkClass = (isActive) => [
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8Zm4 0a3 3 0 0 1 6 0M8 12h.01M16 12h.01" />
         </svg>
         Pesanan
+      </RouterLink>
+      <RouterLink :to="{ name: 'umkm-admin-chat' }" :class="linkClass(activeItem === 'chat')" :aria-current="activeItem === 'chat' ? 'page' : undefined" @click="mobileMenuOpen = false">
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z" />
+        </svg>
+        Chat Admin
       </RouterLink>
       <RouterLink :to="{ name: 'umkm-wallet' }" :class="linkClass(activeItem === 'wallet')" :aria-current="activeItem === 'wallet' ? 'page' : undefined" @click="mobileMenuOpen = false">
         <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -43,14 +43,18 @@ async function load() {
 }
 watch(() => route.query, () => { if (route.name === 'admin-produk') load() }, { immediate: true })
 
-async function toggle(p) {
-  if (!p.is_active || moderatingId.value) return
-  if (!confirm(`Nonaktifkan produk "${p.name}"? Produk tidak akan tampil di katalog pelanggan.`)) return
+async function setActive(p, active) {
+  if (moderatingId.value) return
+  const prompt = active
+    ? `Aktifkan kembali produk "${p.name}"? Produk akan tampil di katalog jika toko aktif dan stok tersedia.`
+    : `Nonaktifkan produk "${p.name}"? Produk tidak akan tampil di katalog pelanggan.`
+  if (!confirm(prompt)) return
   moderatingId.value = p.id
+  error.value = ''
   notice.value = ''
   try {
-    await setProductActive(p.id, false)
-    notice.value = `${p.name} dinonaktifkan.`
+    await setProductActive(p.id, active)
+    notice.value = active ? `${p.name} diaktifkan kembali.` : `${p.name} dinonaktifkan.`
     await load()
   } catch (e) {
     error.value = e.message
@@ -124,13 +128,11 @@ async function lihatDetail(product) {
             <td class="whitespace-nowrap p-3 text-right">
               <button class="rounded-lg border border-gray-900 px-3 py-2 font-semibold text-gray-900 transition hover:bg-gray-50" type="button" @click="lihatDetail(p)">Detail</button>
               <button
-                v-if="p.is_active"
                 class="ml-2 rounded-lg border border-gray-900 px-3 py-2 font-semibold text-gray-900 transition hover:bg-gray-50 disabled:cursor-wait disabled:opacity-50"
                 type="button"
                 :disabled="moderatingId === p.id"
-                @click="toggle(p)"
-              >{{ moderatingId === p.id ? 'Menonaktifkan...' : 'Nonaktifkan' }}</button>
-              <span v-else class="ml-2 text-xs text-muted">Diblokir / nonaktif</span>
+                @click="setActive(p, !p.is_active)"
+              >{{ moderatingId === p.id ? (p.is_active ? 'Menonaktifkan...' : 'Mengaktifkan...') : p.is_active ? 'Nonaktifkan' : 'Aktifkan' }}</button>
             </td>
           </tr>
         </tbody>
